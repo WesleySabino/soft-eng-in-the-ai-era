@@ -1,5 +1,6 @@
 /**
- * Reading progress stored locally (no tracking, no server).
+ * Reading progress stored locally (no server). When analytics is enabled,
+ * finishing a chapter also sends an anonymous `chapter_complete` event.
  * - Chapters mark themselves complete when #chapter-end becomes visible.
  * - Any element with [data-progress-for="<id>"] gets data-done="true" when completed.
  * - [data-progress-count] shows "n / 18", [data-progress-ring] animates an SVG ring.
@@ -25,7 +26,9 @@ function write(list: number[]) {
 
 export function markDone(id: number) {
   const list = readProgress();
-  if (!list.includes(id)) write([...list, id]);
+  if (list.includes(id)) return;
+  write([...list, id]);
+  (window as any).gtag?.('event', 'chapter_complete', { chapter_id: id, language: document.documentElement.lang });
 }
 
 function paint() {

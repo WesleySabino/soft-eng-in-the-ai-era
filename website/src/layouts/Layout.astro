@@ -1,6 +1,7 @@
 ---
 import '../styles/global.css';
 import SEO from '../components/SEO.astro';
+import Analytics from '../components/Analytics.astro';
 import { CHAPTERS, PARTS, chaptersOfPart, type Lang } from '../data/chapters';
 import { UI, htmlLang } from '../i18n/ui';
 import { asset, chapterUrl, homeUrl } from '../lib/paths';
@@ -152,6 +153,7 @@ const switchHref = altPath ?? homeUrl(otherLang);
           <a href={switchHref} hreflang={otherLang === 'pt' ? 'pt-BR' : 'en'} data-lang-switch={otherLang} class="text-zinc-300 hover:text-white">{t.switchLang} →</a>
           <a href={chapterUrl(lang, CHAPTERS[16])} class="text-zinc-400 hover:text-white">{CHAPTERS[16].short[lang]}</a>
           <a href={chapterUrl(lang, CHAPTERS[17])} class="text-zinc-400 hover:text-white">{CHAPTERS[17].short[lang]}</a>
+          <button type="button" data-consent-open hidden class="text-zinc-500 hover:text-white">{lang === 'pt' ? 'Preferências de cookies' : 'Cookie preferences'}</button>
         </div>
       </div>
     </footer>
@@ -211,5 +213,6 @@ const switchHref = altPath ?? homeUrl(otherLang);
         }),
       );
     </script>
+    <Analytics lang={lang} />
   </body>
 </html>

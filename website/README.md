@@ -51,7 +51,15 @@ Editing a report file changes the "full text" panels, the references explorer, t
 glossary and the templates on the next build. Lesson copy lives in `src/lessons/`.
 
 Reading progress, the 90-day plan, checklists and the self-assessment are
-stored only in the reader's browser (`localStorage`); there is no tracking or backend.
+stored only in the reader's browser (`localStorage`); there is no backend.
+
+## Analytics
+
+Google Analytics 4 is included only when `PUBLIC_GA_ID` is set at build time (the deploy
+workflow sets it), so `npm run dev` and local builds never send analytics. It uses Consent
+Mode v2: analytics cookies stay off until the visitor clicks **Accept** in the banner, and
+ad storage is always off. "Cookie preferences" in the footer reopens the banner. Finishing
+a chapter sends a `chapter_complete` event (`chapter_id`, `language`).
 
 ## Deploying to GitHub Pages
 
@@ -63,7 +71,9 @@ The workflow at `../.github/workflows/deploy.yml` builds and deploys on every pu
 
 The workflow sets `SITE_URL` and `BASE_PATH` automatically from the Pages configuration,
 so canonical URLs, `hreflang` links, the sitemap and all internal links are correct for
-both `https://<user>.github.io/<repo>/` and custom domains.
+both `https://<user>.github.io/<repo>/` and custom domains. The live site uses the custom
+domain **https://softeng.sabinolab.site/**: a `CNAME` record `softeng` → `wesleysabino.github.io`
+at the DNS provider, plus the custom domain set in the repository's Pages settings.
 
 To build for another host, set them yourself:
 

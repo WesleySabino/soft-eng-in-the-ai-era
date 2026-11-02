@@ -1,0 +1,92 @@
+---
+/**
+ * Google Analytics 4 with Consent Mode v2.
+ * - Rendered only when PUBLIC_GA_ID is set at build time (the deploy workflow sets it),
+ *   so local development never sends analytics.
+ * - analytics_storage starts "denied" until the visitor accepts in the banner;
+ *   ad-related storage is always denied. The choice is kept in localStorage.
+ * - Any element with [data-consent-open] reopens the banner.
+ */
+import type { Lang } from '../data/chapters';
+
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const gaId = import.meta.env.PUBLIC_GA_ID as string | undefined;
+
+const t = {
+  en: {
+    label: 'Analytics consent',
+    text: 'May we use Google Analytics cookies to learn which lessons help people most? No ads and no advertising profiles. You can change your mind anytime in the footer.',
+    accept: 'Accept',
+    decline: 'Decline',
+  },
+  pt: {
+    label: 'Consentimento de análise',
+    text: 'Podemos usar cookies do Google Analytics para entender quais lições mais ajudam? Sem anúncios e sem perfis publicitários. Você pode mudar de ideia quando quiser no rodapé.',
+    accept: 'Aceitar',
+    decline: 'Recusar',
+  },
+}[lang];
+---
+
+{
+  gaId && (
+    <>
+      <div
+        id="consent"
+        hidden
+        role="region"
+        aria-label={t.label}
+        class="glass fixed right-4 bottom-4 left-4 z-[90] max-w-md rounded-2xl p-5 text-sm leading-relaxed text-zinc-300 shadow-2xl sm:left-auto"
+      >
+        <p>{t.text}</p>
+        <div class="mt-4 flex justify-end gap-2">
+          <button type="button" data-consent="denied" class="btn-ghost !px-4 !py-1.5 text-xs">{t.decline}</button>
+          <button type="button" data-consent="granted" class="btn-primary !px-4 !py-1.5 text-xs">{t.accept}</button>
+        </div>
+      </div>
+      <script is:inline define:vars={{ gaId }}>
+        window.dataLayer = window.dataLayer || [];
+        window.gtag = function () {
+          window.dataLayer.push(arguments);
+        };
+        var KEY = 'seai:consent:v1';
+        var choice = null;
+        try {
+          choice = localStorage.getItem(KEY);
+        } catch (e) {}
+        gtag('consent', 'default', {
+          analytics_storage: choice === 'granted' ? 'granted' : 'denied',
+          ad_storage: 'denied',
+          ad_user_data: 'denied',
+          ad_personalization: 'denied',
+        });
+        gtag('js', new Date());
+        gtag('config', gaId);
+        var s = document.createElement('script');
+        s.async = true;
+        s.src = 'https://www.googletagmanager.com/gtag/js?id=' + gaId;
+        document.head.appendChild(s);
+
+        var box = document.getElementById('consent');
+        if (choice !== 'granted' && choice !== 'denied') box.hidden = false;
+        box.querySelectorAll('[data-consent]').forEach(function (b) {
+          b.addEventListener('click', function () {
+            var v = b.getAttribute('data-consent');
+            try {
+              localStorage.setItem(KEY, v);
+            } catch (e) {}
+            gtag('consent', 'update', { analytics_storage: v });
+            box.hidden = true;
+          });
+        });
+        document.querySelectorAll('[data-consent-open]').forEach(function (b) {
+          b.hidden = false;
+          b.addEventListener('click', function () {
+            box.hidden = false;
+          });
+        });
+      </script>
+    </>
+  )
+}
