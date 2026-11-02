@@ -1,0 +1,83 @@
+---
+import Lesson from '../components/ui/Lesson.astro';
+import Callout from '../components/ui/Callout.astro';
+import Takeaways from '../components/ui/Takeaways.astro';
+import Quiz from '../components/islands/Quiz.tsx';
+import CardDeck from '../components/islands/CardDeck.tsx';
+import SelfAssessment from '../components/islands/SelfAssessment.tsx';
+import { CHAPTERS, type Lang } from '../data/chapters';
+import { chapterUrl } from '../lib/paths';
+
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+// dimension → chapter that helps develop it
+const dimChapter = [5, 6, 5, 6, 6, 7, 8, 5, 13, 12];
+const links = dimChapter.map((id) => ({ url: chapterUrl(lang, CHAPTERS[id - 1]), title: CHAPTERS[id - 1].short[lang] }));
+
+const c = {
+  en: {
+    l1: { label: 'The breadth of responsibility', title: 'Excellence at every level', intro: 'A development proposal, not a standardization of job titles. The number of agents you use does not determine seniority.' },
+    levels: [
+      { tag: 'Level 1', icon: '🌱', title: 'Early career', summary: 'Understand and complete bounded tasks with AI.', detail: 'Growth can mean producing a smaller project that you fully understand and can operate.', example: 'Explains behavior, detects an edge case and demonstrates that it works.' },
+      { tag: 'Level 2', icon: '🧭', title: 'Mid-level', summary: 'Drive a feature through the delivery cycle.', detail: 'From contract to operation, coordinating human and agent execution.', example: 'Formulates the contract, coordinates execution, validates and monitors operation.' },
+      { tag: 'Level 3', icon: '🏛️', title: 'Senior', summary: 'Resolve ambiguity and expand the team’s autonomy.', detail: 'Growth can mean doing fewer manual reviews because you built better controls.', example: 'Translates judgment into architecture, checks and reusable context.' },
+      { tag: 'Level 4', icon: '🌉', title: 'Staff / principal', summary: 'Improve decisions and flow across teams.', detail: 'Works on structural bottlenecks and shared capabilities.', example: 'Removes structural bottlenecks and creates shared capabilities with observed effect.' },
+      { tag: 'Level 5', icon: '🧑‍✈️', title: 'Engineering leadership', summary: 'Create conditions, priorities and incentives.', detail: 'Makes the environment where people and agents can do their best work.', example: 'Provides infrastructure, training, accountability and metrics consistent with outcomes.' },
+    ],
+    ex: 'Evidence of excellence',
+    l2: { label: 'Self-assessment', title: 'Draw your profile', intro: 'AI can be used at every level. The scale measures <strong>autonomy in driving and evaluating the work</strong>: 0 Dependence · 1 Assisted execution · 2 Bounded autonomy · 3 Judgment · 4 Shared capability. Don’t sum the scores — use the shape to pick your next development experience and spot gaps incompatible with your current responsibility.' },
+    l3: { label: 'A portfolio for the new role', title: 'Show judgment, not just artifacts', intro: 'Present a problem, a solution contract, architecture decisions, division of work, validation evidence and observed effect — and the role you played and the limits you recognized. A strong portfolio includes a failure you found and how it changed the process, and distinguishes prototype, experiment and system in operation.' },
+    interview: 'For interviews and internal training: propose a change with AI and introduce a variation — concurrency, a timeout, more volume or a conflicting requirement. Observe how the person clarifies, chooses evidence and adapts. Adjust it to your domain; it is not a validated psychometric test.',
+    takeaways: [
+      'Seniority is the <strong>breadth of responsibility</strong> you can carry, not the number of agents you run.',
+      'Use the ten-dimension radar to choose your <strong>next development experience</strong>.',
+      'Build a portfolio that shows <strong>contracts, evidence, failures and observed effect</strong>.',
+    ],
+    quiz: [
+      { q: 'A senior engineer now does fewer manual reviews than last year. What could that indicate?', options: ['Declining performance.', 'Growth — if they built controls that made repetitive review unnecessary.', 'Laziness.', 'Nothing.'], answer: 1, explain: 'Translating judgment into checks, architecture and context is senior-level contribution.' },
+      { q: 'How should you use the self-assessment scores?', options: ['Sum them into a performance score.', 'Use the distribution to choose the next development experience and spot gaps.', 'Compare with colleagues.', 'Use them for promotions.'], answer: 1, explain: 'The rubric is not a scientific measure of professional value.' },
+    ],
+  },
+  pt: {
+    l1: { label: 'A amplitude da responsabilidade', title: 'Excelência em cada nível', intro: 'Uma proposta de desenvolvimento, não uma padronização de cargos. O número de agentes utilizados não determina a senioridade.' },
+    levels: [
+      { tag: 'Nível 1', icon: '🌱', title: 'Início de carreira', summary: 'Entender e concluir tarefas delimitadas com IA.', detail: 'Evoluir pode significar produzir um projeto menor que você compreende e consegue operar.', example: 'Explica comportamento, detecta caso de borda e demonstra funcionamento.' },
+      { tag: 'Nível 2', icon: '🧭', title: 'Pleno', summary: 'Conduzir uma funcionalidade pelo ciclo de entrega.', detail: 'Do contrato à operação, coordenando execução humana e de agentes.', example: 'Formula contrato, coordena execução, valida e acompanha operação.' },
+      { tag: 'Nível 3', icon: '🏛️', title: 'Sênior', summary: 'Resolver ambiguidades e ampliar a autonomia da equipe.', detail: 'Evoluir pode significar fazer menos revisões manuais porque criou controles melhores.', example: 'Traduz julgamento em arquitetura, verificações e contexto reutilizável.' },
+      { tag: 'Nível 4', icon: '🌉', title: 'Staff ou principal', summary: 'Melhorar decisões e fluxo entre equipes.', detail: 'Atua sobre gargalos estruturais e capacidades compartilhadas.', example: 'Remove gargalos estruturais e cria capacidades compartilhadas com efeito observado.' },
+      { tag: 'Nível 5', icon: '🧑‍✈️', title: 'Liderança de engenharia', summary: 'Criar condições, prioridades e incentivos.', detail: 'Constrói o ambiente em que pessoas e agentes fazem seu melhor trabalho.', example: 'Oferece infraestrutura, formação, responsabilidade e métricas coerentes com resultados.' },
+    ],
+    ex: 'Evidência de excelência',
+    l2: { label: 'Autoavaliação', title: 'Desenhe seu perfil', intro: 'A IA pode ser usada em todos os níveis. A escala mede <strong>autonomia para conduzir e avaliar o trabalho</strong>: 0 Dependência · 1 Execução assistida · 2 Autonomia delimitada · 3 Julgamento · 4 Capacidade compartilhada. Não some as notas — use a forma para escolher a próxima experiência de desenvolvimento e identificar lacunas incompatíveis com sua responsabilidade atual.' },
+    l3: { label: 'Um portfólio para o novo papel', title: 'Mostre julgamento, não só artefatos', intro: 'Apresente um problema, um contrato de solução, decisões de arquitetura, divisão de trabalho, evidências de validação e efeito observado — e o papel que você exerceu e os limites que reconheceu. Um bom portfólio inclui uma falha encontrada e como ela mudou o processo, e distingue protótipo, experimento e sistema em operação.' },
+    interview: 'Para entrevistas e formação interna: proponha uma mudança com IA e introduza uma variação — concorrência, timeout, volume maior ou requisito conflitante. Observe como a pessoa esclarece, escolhe evidência e adapta. Ajuste ao domínio; não é um teste psicométrico validado.',
+    takeaways: [
+      'Senioridade é a <strong>amplitude de responsabilidade</strong> que você sustenta, não o número de agentes que executa.',
+      'Use o radar de dez dimensões para escolher sua <strong>próxima experiência de desenvolvimento</strong>.',
+      'Monte um portfólio que mostre <strong>contratos, evidências, falhas e efeito observado</strong>.',
+    ],
+    quiz: [
+      { q: 'Um engenheiro sênior faz menos revisões manuais do que no ano passado. O que isso pode indicar?', options: ['Queda de desempenho.', 'Evolução — se ele criou controles que tornaram desnecessária a revisão repetitiva.', 'Preguiça.', 'Nada.'], answer: 1, explain: 'Traduzir julgamento em verificações, arquitetura e contexto é contribuição de nível sênior.' },
+      { q: 'Como usar as notas da autoavaliação?', options: ['Somá-las numa nota de desempenho.', 'Usar a distribuição para escolher a próxima experiência de desenvolvimento e identificar lacunas.', 'Comparar com colegas.', 'Usar em promoções.'], answer: 1, explain: 'A rubrica não é uma medida científica de valor profissional.' },
+    ],
+  },
+}[lang];
+---
+
+<Lesson n="15.1" label={c.l1.label} title={c.l1.title} wide>
+  <p slot="intro">{c.l1.intro}</p>
+  <CardDeck client:visible lang={lang} cards={c.levels} cols={3} exampleLabel={c.ex} />
+</Lesson>
+
+<Lesson n="15.2" label={c.l2.label} title={c.l2.title} wide>
+  <p slot="intro" set:html={c.l2.intro} />
+  <SelfAssessment client:visible lang={lang} links={links} />
+</Lesson>
+
+<Lesson n="15.3" label={c.l3.label} title={c.l3.title}>
+  <p slot="intro">{c.l3.intro}</p>
+  <Callout kind="synthesis" lang={lang}><p>{c.interview}</p></Callout>
+</Lesson>
+
+<Takeaways lang={lang} items={c.takeaways} />
+<section class="pb-10"><div class="container-x"><div data-reveal><Quiz client:visible lang={lang} questions={c.quiz} /></div></div></section>

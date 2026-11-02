@@ -1,0 +1,63 @@
+---
+import Lesson from '../components/ui/Lesson.astro';
+import ReferenceExplorer from '../components/islands/ReferenceExplorer.tsx';
+import type { Lang } from '../data/chapters';
+import { references } from '../lib/report';
+
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const refs = references(lang);
+const byId = Object.fromEntries(refs.map((r) => [r.id, r]));
+
+const c = {
+  en: {
+    l1: { label: 'Annotated bibliography', title: 'Every source, with its nature and limits', intro: 'All sources were consulted on November 1, 2026. Filter by theme or search; each card says what kind of source it is — a survey, an experiment, a vendor account, a framework or documentation.' },
+    l2: { label: 'Reading paths', title: 'Four ways to go deeper', intro: 'Pair each path with real work: reading alone doesn’t change practice.' },
+    paths: [
+      ['Change your own practice', ['F01', 'F17', 'F27', 'F20'], 'Pair the reading with a real delivery.'],
+      ['Expand the team’s capacity', ['F03', 'F04', 'F38', 'F12', 'F36'], 'Choose a bottleneck and track its effect.'],
+      ['Exercise technical judgment', ['F14', 'F15', 'F28', 'F29', 'F32'], 'Solve variants and investigate failures.'],
+      ['Increase autonomy with control', ['F23', 'F24', 'F25', 'F21'], 'Assess the concrete environment before expanding permissions.'],
+    ],
+  },
+  pt: {
+    l1: { label: 'Bibliografia comentada', title: 'Cada fonte, com sua natureza e seus limites', intro: 'Todas as fontes foram consultadas em 1º de novembro de 2026. Filtre por tema ou busque; cada cartão diz que tipo de fonte é — pesquisa, experimento, relato de fornecedor, framework ou documentação.' },
+    l2: { label: 'Trilhas de aprofundamento', title: 'Quatro caminhos para ir mais fundo', intro: 'Combine cada trilha com trabalho real: só ler não muda a prática.' },
+    paths: [
+      ['Mudar a própria prática', ['F01', 'F17', 'F27', 'F20'], 'Acompanhe a leitura com uma entrega real.'],
+      ['Ampliar a capacidade da equipe', ['F03', 'F04', 'F38', 'F12', 'F36'], 'Escolha um gargalo e acompanhe seu efeito.'],
+      ['Exercer julgamento técnico', ['F14', 'F15', 'F28', 'F29', 'F32'], 'Resolva variantes e investigue falhas.'],
+      ['Aumentar autonomia com controle', ['F23', 'F24', 'F25', 'F21'], 'Avalie o ambiente concreto antes de ampliar permissões.'],
+    ],
+  },
+}[lang];
+const strip = (h: string) => h.replace(/<[^>]+>/g, '');
+---
+
+<Lesson n="17.1" label={c.l1.label} title={c.l1.title} wide>
+  <p slot="intro">{c.l1.intro}</p>
+  <ReferenceExplorer client:visible lang={lang} refs={refs} />
+</Lesson>
+
+<Lesson n="17.2" label={c.l2.label} title={c.l2.title} wide>
+  <p slot="intro">{c.l2.intro}</p>
+  <div class="grid gap-5 md:grid-cols-2">
+    {c.paths.map(([title, ids, tip], i) => (
+      <article class="glass spotlight p-7" data-reveal data-delay={String((i % 2) * 0.1)}>
+        <p class="eyebrow">0{i + 1}</p>
+        <h3 class="mt-3 font-serif text-3xl">{title}</h3>
+        <ol class="mt-5 space-y-2">
+          {(ids as string[]).map((id) => byId[id] && (
+            <li>
+              <a href={byId[id].url} target="_blank" rel="noopener noreferrer" class="group flex gap-3 text-sm">
+                <span class="font-mono text-xs text-[var(--accent)]">{id}</span>
+                <span class="text-zinc-300 group-hover:text-white group-hover:underline">{strip(byId[id].citationHtml)}</span>
+              </a>
+            </li>
+          ))}
+        </ol>
+        <p class="mt-5 text-sm text-zinc-500">→ {tip}</p>
+      </article>
+    ))}
+  </div>
+</Lesson>

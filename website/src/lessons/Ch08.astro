@@ -1,0 +1,111 @@
+---
+import Lesson from '../components/ui/Lesson.astro';
+import Callout from '../components/ui/Callout.astro';
+import Takeaways from '../components/ui/Takeaways.astro';
+import BigStatement from '../components/ui/BigStatement.astro';
+import Quiz from '../components/islands/Quiz.tsx';
+import TrustPath from '../components/islands/TrustPath.tsx';
+import CardDeck from '../components/islands/CardDeck.tsx';
+import AutonomyDial from '../components/islands/AutonomyDial.tsx';
+import type { Lang } from '../data/chapters';
+
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+
+const c = {
+  en: {
+    l1: { label: 'The trust path', title: 'Follow untrusted content to its effect', intro: 'Model the path between <strong>information received</strong>, <strong>agent decision</strong>, <strong>tool invoked</strong>, <strong>credential used</strong> and <strong>effect produced</strong>. An issue, a log or a tool response may contain text that tries to redirect the agent. Toggle the controls and send the content through.' },
+    owasp: 'The OWASP Top 10 for Agentic Applications covers goal hijacking, tool misuse, privileges, supply chain and memory/context poisoning — an expert framework for risk analysis, not a guarantee obtained by completing a list. [F24]',
+    contain: 'Combine guidance to the model with external controls: service-side authorization, execution isolation, file restrictions, secret protection and egress control. Containment limits consequences even when a model decision fails. [F23]',
+    big: 'A comment saying “don’t expose secrets” does not stop a process from reading a credential that is already in its environment.',
+    l2: { label: 'The repertoire', title: 'Six competencies to add', intro: 'A practical synthesis — concrete decisions depend on your data, systems and policies.' },
+    comps: [
+      { icon: '🪪', title: 'Identity & authorization', summary: 'User, agent, subagent and tool are different principals.', detail: 'Grant scopes appropriate to the task. The MCP security guidance covers token passthrough, confused-deputy problems and scopes — a standard protocol doesn’t remove the need to understand each component’s authorization. [F25]', example: 'A read-only token for investigation; a separate, short-lived deploy credential for the authorized flow.' },
+      { icon: '📦', title: 'Isolated environments', summary: 'Separate investigation and execution from production.', detail: 'Isolation should follow the consequences of the operations being performed.', example: 'Agents run in a sandbox with synthetic data; production access only via a reviewed pipeline.' },
+      { icon: '🗂️', title: 'Data management', summary: 'Know what can be sent where — and why.', detail: 'Classify what each service may receive, record the purpose and limit retention and exposure.', example: 'Customer PII never leaves the region; logs sent to tools are scrubbed.' },
+      { icon: '🔗', title: 'Supply chain', summary: 'Dependencies, scripts, extensions and skills have provenance.', detail: 'Verify where they come from and control updates — a skill is executable influence on your agents.', example: 'Pinned, reviewed skills in the repository instead of copy-pasted ones from the internet.' },
+      { icon: '🧾', title: 'Traceability', summary: 'Link request, actions, changes and owner.', detail: 'Preserve the evidence you will need to investigate what happened.', example: 'Each agent action tagged with task id, operation id and the human who authorized the flow.' },
+      { icon: '🛟', title: 'Recovery', summary: 'Stop, revoke, revert, compensate.', detail: 'Be able to interrupt execution, revoke access, revert what is reversible and handle effects that require compensation.', example: 'A kill switch for agent runs and a documented procedure for rotating exposed credentials.' },
+    ],
+    l3: { label: 'Verify the real reach of controls', title: 'A control’s name is not its scope', intro: 'GitHub’s Copilot firewall documentation distinguishes processes the agent starts via Bash, MCP servers, setup steps and processes outside the environment — in the version consulted, the firewall did not directly cover all of these routes. [F26] Ask of every control:' },
+    asks: ['What actually prevents the operation?', 'Who can change that rule?', 'Does it also apply to subprocesses and integrations in use?'],
+    l4: { label: 'An autonomy matrix', title: 'How much autonomy, to start with?', intro: 'A working proposal, not a normative classification. Approving every command turns you into a confirmation operator: concentrate human decisions where they change the risk or resolve a material ambiguity.' },
+    takeaways: [
+      'Treat issues, logs, documents and tool output as <strong>data</strong>, never as instructions with authority.',
+      'Guidance helps the model; only <strong>controls outside the model</strong> — isolation, scoped credentials, egress limits, service authorization — bound consequences.',
+      'Verify each control’s <strong>actual reach</strong>, including subprocesses and integrations.',
+      'Start autonomy from the <strong>consequence</strong> of the action and expand it with demonstrated control, never verbal confidence.',
+    ],
+    quiz: [
+      { q: 'An agent with a production database credential reads a log line instructing it to drop a table. Which control limits the damage even if the model is fooled?', options: ['A stronger system prompt.', 'A scoped credential without destructive permissions in production.', 'Asking the agent to be careful.', 'A larger model.'], answer: 1, explain: 'Containment outside the model bounds the consequence when a decision fails.' },
+      { q: 'A feature is called “agent firewall.” What should you do before relying on it?', options: ['Trust the name.', 'Check exactly which processes and routes it covers.', 'Disable all network.', 'Nothing — firewalls are complete by definition.'], answer: 1, explain: 'Controls have scope; verify the protection rather than inferring it from the feature’s name.' },
+      { q: 'Which situation deserves the most constrained starting autonomy?', options: ['Research with permitted data.', 'A bounded change in an isolated environment.', 'A hard-to-reverse, far-reaching effect.', 'A routine, reversible, well-covered change.'], answer: 2, explain: 'Strong limits and a decision by an identified owner; autonomy never based on verbal assurance alone.' },
+    ],
+  },
+  pt: {
+    l1: { label: 'O caminho da confiança', title: 'Siga o conteúdo não confiável até seu efeito', intro: 'Modele o caminho entre <strong>informação recebida</strong>, <strong>decisão do agente</strong>, <strong>ferramenta acionada</strong>, <strong>credencial utilizada</strong> e <strong>efeito produzido</strong>. Uma issue, um log ou a resposta de uma ferramenta pode conter texto que tenta redirecionar o agente. Ative os controles e envie o conteúdo pelo caminho.' },
+    owasp: 'O OWASP Top 10 para Aplicações com Agentes cobre desvio de objetivos, uso indevido de ferramentas, privilégios, cadeia de suprimentos e contaminação de memória e contexto — um framework de especialistas para análise de risco, não uma garantia obtida por completar uma lista. [F24]',
+    contain: 'Combine orientação ao modelo com controles externos: autorização no serviço, isolamento de execução, restrição de arquivos, proteção de segredos e controle de saída de rede. A contenção limita consequências mesmo quando uma decisão do modelo falha. [F23]',
+    big: 'Um comentário dizendo “não exponha segredos” não impede um processo de ler uma credencial que já está no ambiente.',
+    l2: { label: 'O repertório', title: 'Seis competências a acrescentar', intro: 'Uma síntese prática — as decisões concretas dependem dos seus dados, sistemas e políticas.' },
+    comps: [
+      { icon: '🪪', title: 'Identidade e autorização', summary: 'Usuário, agente, subagente e ferramenta são principais diferentes.', detail: 'Conceda escopos adequados à tarefa. A documentação de segurança do MCP aborda repasse de tokens, confusão de autoridade e escopos — um protocolo padrão não elimina a necessidade de entender a autorização de cada componente. [F25]', example: 'Token somente leitura para investigação; credencial de deploy separada e de curta duração para o fluxo autorizado.' },
+      { icon: '📦', title: 'Ambientes isolados', summary: 'Separar investigação e execução da produção.', detail: 'O isolamento deve acompanhar a consequência das operações realizadas.', example: 'Agentes rodam em sandbox com dados sintéticos; acesso à produção só via pipeline revisado.' },
+      { icon: '🗂️', title: 'Gestão de dados', summary: 'Saber o que pode ser enviado para onde — e por quê.', detail: 'Classifique o que cada serviço pode receber, registre a finalidade e limite retenção e exposição.', example: 'Dados pessoais de clientes não saem da região; logs enviados a ferramentas são higienizados.' },
+      { icon: '🔗', title: 'Cadeia de suprimentos', summary: 'Dependências, scripts, extensões e skills têm procedência.', detail: 'Verifique de onde vêm e controle atualizações — uma skill é influência executável sobre seus agentes.', example: 'Skills fixadas e revisadas no repositório em vez de copiadas da internet.' },
+      { icon: '🧾', title: 'Rastreabilidade', summary: 'Relacionar solicitação, ações, mudanças e responsável.', detail: 'Preserve as evidências necessárias para investigar o que aconteceu.', example: 'Cada ação do agente marcada com id da tarefa, id da operação e quem autorizou o fluxo.' },
+      { icon: '🛟', title: 'Recuperação', summary: 'Interromper, revogar, reverter, compensar.', detail: 'Ser capaz de interromper a execução, revogar acesso, reverter o que é reversível e tratar efeitos que exigem compensação.', example: 'Um botão de parada para execuções de agentes e procedimento documentado de rotação de credenciais expostas.' },
+    ],
+    l3: { label: 'Verificar o alcance real dos controles', title: 'O nome de um controle não é seu escopo', intro: 'A documentação do firewall do GitHub Copilot distingue processos iniciados pelo agente via Bash, servidores MCP, etapas de configuração e processos externos — na versão consultada, o firewall não cobria diretamente todas essas rotas. [F26] Pergunte de cada controle:' },
+    asks: ['O que efetivamente impede a operação?', 'Quem pode alterar essa regra?', 'O controle se aplica também a subprocessos e integrações em uso?'],
+    l4: { label: 'Uma matriz de autonomia', title: 'Quanta autonomia, para começar?', intro: 'Uma proposta de trabalho, não uma classificação normativa. Aprovar cada comando transforma você em operador de confirmações: concentre decisões humanas onde elas mudam o risco ou resolvem uma ambiguidade material.' },
+    takeaways: [
+      'Trate issues, logs, documentos e respostas de ferramentas como <strong>dados</strong>, nunca como instruções com autoridade.',
+      'Orientação ajuda o modelo; só <strong>controles fora do modelo</strong> — isolamento, credenciais restritas, limites de rede, autorização no serviço — limitam consequências.',
+      'Verifique o <strong>alcance real</strong> de cada controle, inclusive subprocessos e integrações.',
+      'Defina a autonomia inicial pela <strong>consequência</strong> da ação e amplie com controle demonstrado, nunca com confiança verbal.',
+    ],
+    quiz: [
+      { q: 'Um agente com credencial do banco de produção lê uma linha de log mandando apagar uma tabela. Que controle limita o dano mesmo se o modelo for enganado?', options: ['Um prompt de sistema mais forte.', 'Uma credencial restrita, sem permissões destrutivas em produção.', 'Pedir ao agente para ter cuidado.', 'Um modelo maior.'], answer: 1, explain: 'A contenção fora do modelo limita a consequência quando uma decisão falha.' },
+      { q: 'Um recurso se chama “firewall do agente”. O que fazer antes de confiar nele?', options: ['Confiar no nome.', 'Verificar exatamente quais processos e rotas ele cobre.', 'Desligar toda a rede.', 'Nada — firewalls são completos por definição.'], answer: 1, explain: 'Controles têm escopo; verifique a proteção efetiva em vez de inferi-la pelo nome.' },
+      { q: 'Qual situação merece a autonomia inicial mais restrita?', options: ['Pesquisa com dados permitidos.', 'Mudança delimitada em ambiente isolado.', 'Efeito difícil de reverter e de grande alcance.', 'Mudança rotineira, reversível e bem coberta.'], answer: 2, explain: 'Limites fortes e decisão de um responsável identificado; autonomia nunca baseada só em confiança verbal.' },
+    ],
+  },
+}[lang];
+---
+
+<Lesson n="8.1" label={c.l1.label} title={c.l1.title} wide>
+  <p slot="intro" set:html={c.l1.intro} />
+  <TrustPath client:visible lang={lang} />
+  <div class="grid gap-x-6 lg:grid-cols-2">
+    <Callout kind="evidence" lang={lang} source="OWASP"><p>{c.owasp}</p></Callout>
+    <Callout kind="evidence" lang={lang} source="Anthropic"><p>{c.contain}</p></Callout>
+  </div>
+</Lesson>
+
+<BigStatement>{c.big}</BigStatement>
+
+<Lesson n="8.2" label={c.l2.label} title={c.l2.title} wide>
+  <p slot="intro">{c.l2.intro}</p>
+  <CardDeck client:visible lang={lang} cards={c.comps} cols={3} />
+</Lesson>
+
+<Lesson n="8.3" label={c.l3.label} title={c.l3.title} wide>
+  <p slot="intro">{c.l3.intro}</p>
+  <ol class="grid gap-4 md:grid-cols-3">
+    {c.asks.map((q, i) => (
+      <li class="glass spotlight p-6" data-reveal data-delay={String(i * 0.1)}>
+        <span class="font-mono text-xs text-[var(--accent)]">0{i + 1}</span>
+        <p class="mt-3 font-serif text-2xl leading-snug text-white">{q}</p>
+      </li>
+    ))}
+  </ol>
+</Lesson>
+
+<Lesson n="8.4" label={c.l4.label} title={c.l4.title} wide>
+  <p slot="intro">{c.l4.intro}</p>
+  <AutonomyDial client:visible lang={lang} />
+</Lesson>
+
+<Takeaways lang={lang} items={c.takeaways} />
+<section class="pb-10"><div class="container-x"><div data-reveal><Quiz client:visible lang={lang} questions={c.quiz} /></div></div></section>

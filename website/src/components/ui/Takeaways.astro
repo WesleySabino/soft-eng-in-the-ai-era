@@ -1,0 +1,25 @@
+---
+import type { Lang } from '../../data/chapters';
+import { UI } from '../../i18n/ui';
+interface Props {
+  lang: Lang;
+  items: string[];
+}
+const { lang, items } = Astro.props;
+---
+
+<section class="relative py-20">
+  <div class="container-x">
+    <p class="eyebrow" data-reveal>{UI[lang].takeaways}</p>
+    <ol class="mt-8 grid gap-4 md:grid-cols-2">
+      {
+        items.map((item, i) => (
+          <li class="glass spotlight flex gap-5 p-6" data-reveal data-delay={String((i % 2) * 0.08)}>
+            <span class="font-serif text-4xl leading-none text-[var(--accent)] italic">{i + 1}</span>
+            <p class="text-[1.02rem] leading-relaxed text-zinc-200" set:html={item} />
+          </li>
+        ))
+      }
+    </ol>
+  </div>
+</section>

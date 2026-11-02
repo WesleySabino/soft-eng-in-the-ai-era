@@ -1,0 +1,164 @@
+---
+import Lesson from '../components/ui/Lesson.astro';
+import Callout from '../components/ui/Callout.astro';
+import Takeaways from '../components/ui/Takeaways.astro';
+import BigStatement from '../components/ui/BigStatement.astro';
+import CardDeck from '../components/islands/CardDeck.tsx';
+import Scenario from '../components/islands/Scenario.tsx';
+import Sorter from '../components/islands/Sorter.tsx';
+import Quiz from '../components/islands/Quiz.tsx';
+import type { Lang } from '../data/chapters';
+
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+
+const c = {
+  en: {
+    l1: { label: 'Seven habits of mind', title: 'The mindset behind the new role', intro: 'These habits are an applied synthesis: they connect the manifesto with the evidence and with engineering principles. Open each one — every card ends with what it looks like in practice.' },
+    traits: [
+      { icon: '🎯', title: 'Identity anchored in outcomes', summary: 'Recognize your contribution even when you typed none of it.', detail: 'Discovering the decisive requirement, designing an experiment, choosing a simple architecture or creating a verification mechanism can take more competence than the implementation. Visible effort stops being a good measure of importance — and cutting scope is still engineering.', example: '“The system solves the problem, we know under which conditions it works, we monitor its effects and we can change it safely.”' },
+      { icon: '🔁', title: 'Expanded responsibility', summary: 'You answer for the result and for the mechanism that produced it.', detail: 'When a failure repeats, investigate whether requirements, documentation, access to evidence, tools, tests or a better division of work are missing. Choose the smallest improvement that verifiably reduces recurrence.', example: 'Sometimes an example; sometimes a command; sometimes a test; sometimes an organizational decision. Not every problem needs a platform.' },
+      { icon: '🔬', title: 'Evidence-based trust', summary: 'Useful trust is specific to the task and the risk.', detail: 'Ask: what claim am I accepting, what evidence does it rest on, and what could show it is wrong? The confident tone of an explanation is no substitute for a test, a measurement or an inspection of the real state.', example: 'A CHI 2025 survey (319 workers) found trust in AI associated with how critical effort is spent — a reason to make evaluation habits explicit. [F16]' },
+      { icon: '🚀', title: 'Ambition with scope discipline', summary: 'Explore more — but every prototype must reduce uncertainty.', detail: 'One engineer with agents can now start what used to wait for several people, crossing product, data and implementation. The discipline: choose experiments that answer important questions, and distinguish exploration, candidate implementation and change ready to operate.', example: 'A prototype should tell you whether the flow is understandable, the integration feasible or the latency within budget.' },
+      { icon: '🌐', title: 'Thinking about the whole system', summary: 'Follow the path from need to effect.', detail: 'If code is ready early and then waits days for an environment, integration or decision, there is a flow problem to solve. More work in progress can mean more queues, conflicts and integration cost.', example: 'The DevEx framework’s feedback, cognitive load and flow help tell whether agents free attention or create a new queue of interruptions. [F12]' },
+      { icon: '📚', title: 'Knowledge as shared capability', summary: 'A decision only in someone’s head must be rediscovered.', detail: 'Document reasons, constraints and investigation paths. A recurring discovery needs a stable home — code, a test, an architectural decision or a procedure — useful even when the author isn’t around.', example: 'Software Engineering at Google describes the cost of concentrated expertise and fragmented information. [F36]' },
+      { icon: '⚖️', title: 'Technical humility, decisive action', summary: 'Admit gaps without outsourcing every decision.', detail: 'Distinguish what you verified from what you assume. Agents don’t share memory by default: design memory, access, continuity and operational limits — an intent stated once won’t be available in every run.', example: '“Tested under these conditions; this comes from the platform contract; this is still a hypothesis; this needs the domain owner.”' },
+    ],
+    l2: { label: 'Expanded responsibility in action', title: 'Fix the answer, or fix the system?', intro: 'Pick a response and watch how the problem evolves over the following eight weeks (illustrative numbers).' },
+    scen: {
+      situation: 'Your agent keeps calling a deprecated payments API. You correct it — and next week it happens again.',
+      question: 'What do you do?',
+      label: 'Recurring errors per week',
+      unit: 'weeks',
+      options: [
+        { label: 'Correct each response by hand when it happens.', result: 'The immediate task gets solved every time — and so does the cost of your attention. Nothing about the working system changed.', verdict: 'bad', series: [6, 6, 5, 6, 6, 5, 6, 6] },
+        { label: 'Switch to a larger, more expensive model.', result: 'Maybe slightly better, but the model still retrieves the same stale documentation. The cause wasn’t reasoning ability.', verdict: 'bad', series: [6, 5, 5, 4, 5, 4, 4, 4] },
+        { label: 'Add a reminder to your personal prompt.', result: 'It helps you, sometimes. Colleagues and fresh sessions don’t see it, and nothing checks it.', verdict: 'ok', series: [6, 4, 3, 4, 3, 3, 4, 3] },
+        { label: 'Make the correct version explicit, provide current docs and add a check that fails on the old API.', result: 'The class of error disappears for everyone. The second intervention changed the capability of the working system.', verdict: 'best', series: [6, 3, 1, 0, 0, 0, 0, 0] },
+      ],
+    },
+    l3: { label: 'Evidence-based trust', title: 'Calibrate how much evidence each task deserves', intro: 'Trust isn’t a global setting for “the AI”. It depends on what is being changed. Sort these delegated tasks.' },
+    tbuckets: [
+      { id: 'light', label: 'Lighter evidence is enough', color: '#34d399', hint: 'Well-defined, low-consequence, easy to verify' },
+      { id: 'strong', label: 'Demand strong evidence', color: '#fb7185', hint: 'Authorization, concurrency, data, hard to reverse' },
+    ],
+    titems: [
+      { text: 'Update the docs for a well-defined, typed interface.', bucket: 'light', why: 'Bounded, reversible, and largely checkable mechanically.' },
+      { text: 'Change who can export customer data.', bucket: 'strong', why: 'Authorization boundaries need scenarios that try to cross them.' },
+      { text: 'Rename a module with types and a passing test suite.', bucket: 'light', why: 'Mechanical, verified by the compiler and tests.' },
+      { text: 'Alter the locking strategy for inventory decrements.', bucket: 'strong', why: 'Concurrency bugs pass casual review and appear only under contention.' },
+      { text: 'Migrate the orders table to a new schema.', bucket: 'strong', why: 'Data changes persist; rolling back the binary does not undo them.' },
+      { text: 'Fix a typo in an error message.', bucket: 'light', why: 'Trivial consequence and immediately observable.' },
+    ],
+    big: 'What claim am I accepting? What evidence does it rest on? What could show that it is wrong?',
+    l4: { label: 'Ambition with scope discipline', title: 'Three stages, three levels of evidence', intro: 'Generation speed makes this distinction more necessary, not less. Label your work honestly.' },
+    stages: [
+      ['Exploration', 'Learn something fast: is the flow understandable, is it feasible? Polish and evidence are minimal by design.'],
+      ['Candidate implementation', 'A plausible solution under evaluation. Needs contracts, tests and an honest list of open questions.'],
+      ['Change ready to operate', 'Verified, observable, recoverable. The evidence matches the risk and the consequences.'],
+    ],
+    takeaways: [
+      'Anchor your identity in <strong>outcomes</strong>: discovering the decisive requirement can matter more than writing the code.',
+      'When a failure repeats, fix the <strong>mechanism</strong> with the smallest verifiable improvement — not just the answer.',
+      'Trust is <strong>specific</strong>: demand stronger evidence for authorization, concurrency and data changes.',
+      'Explore boldly, but label work as <strong>exploration, candidate or ready to operate</strong> and match the evidence.',
+    ],
+    quiz: [
+      { q: 'An agent produced an elegant explanation of why a migration is safe. What should raise your confidence?', options: ['How confident the explanation sounds.', 'A test, measurement or inspection of the real state that could have shown it wrong.', 'The model’s size.', 'That a second agent agrees.'], answer: 1, explain: 'Useful trust rests on evidence that could refute the claim. A second agent helps exploration but shares many blind spots.' },
+      { q: 'Which is the best example of “expanded responsibility”?', options: ['Reviewing every line the agent writes.', 'Building a platform for every recurring issue.', 'Choosing the smallest change that verifiably stops a class of failures from recurring.', 'Taking the blame for every incident.'], answer: 2, explain: 'Responsibility covers the mechanism; the point is the smallest improvement that reduces recurrence verifiably.' },
+      { q: 'Why distinguish exploration from a change ready to operate?', options: ['To slow down prototypes.', 'Because each stage needs a different level of polish and evidence.', 'Because agents can only do exploration.', 'To make reporting easier.'], answer: 1, explain: 'An impressive prototype that reduces no uncertainty consumes attention and can create premature commitment.' },
+    ],
+  },
+  pt: {
+    l1: { label: 'Sete hábitos mentais', title: 'A mentalidade por trás do novo papel', intro: 'Esses hábitos são uma síntese aplicada: articulam o manifesto com as evidências e com princípios de engenharia. Abra cada um — toda carta termina com como ele aparece na prática.' },
+    traits: [
+      { icon: '🎯', title: 'Identidade ancorada em resultado', summary: 'Reconhecer sua contribuição mesmo sem ter digitado nada.', detail: 'Descobrir o requisito decisivo, formular um experimento, escolher uma arquitetura simples ou criar um mecanismo de verificação pode exigir mais competência que a implementação. Esforço visível deixa de ser boa medida de importância — e eliminar escopo continua sendo engenharia.', example: '“O sistema resolve o problema, sabemos em quais condições funciona, acompanhamos seus efeitos e conseguimos modificá-lo com segurança.”' },
+      { icon: '🔁', title: 'Responsabilidade ampliada', summary: 'Você responde pelo resultado e pelo mecanismo que o produziu.', detail: 'Quando uma falha se repete, investigue se faltam requisitos, documentação, acesso a evidências, ferramentas, testes ou melhor divisão de trabalho. Escolha a menor melhoria que reduza a recorrência de forma verificável.', example: 'Às vezes um exemplo; às vezes um comando; às vezes um teste; às vezes uma decisão organizacional. Nem todo problema precisa virar plataforma.' },
+      { icon: '🔬', title: 'Confiança baseada em evidências', summary: 'Confiança útil é específica para a tarefa e o risco.', detail: 'Pergunte: que afirmação estou aceitando, em que evidência ela se apoia e o que poderia mostrar que está errada? A segurança aparente de uma explicação não substitui teste, medição ou inspeção do estado real.', example: 'Uma pesquisa da CHI 2025 (319 trabalhadores) associou confiança na IA à forma como o esforço crítico é gasto — razão para explicitar hábitos de avaliação. [F16]' },
+      { icon: '🚀', title: 'Ambição com disciplina de escopo', summary: 'Explore mais — mas todo protótipo deve reduzir incerteza.', detail: 'Um engenheiro com agentes pode começar o que antes esperava várias pessoas, atravessando produto, dados e implementação. A disciplina: escolher experimentos que respondam perguntas importantes e distinguir exploração, implementação candidata e mudança pronta para operar.', example: 'Um protótipo deve dizer se o fluxo é compreensível, se a integração é viável ou se a latência cabe no orçamento.' },
+      { icon: '🌐', title: 'Pensamento sobre o sistema inteiro', summary: 'Acompanhar o caminho da necessidade até o efeito.', detail: 'Se o código fica pronto cedo e espera dias por ambiente, integração ou decisão, há um problema de fluxo. Mais trabalho em andamento pode significar mais filas, conflitos e custo de integração.', example: 'Feedback, carga cognitiva e fluxo do framework DevEx ajudam a avaliar se agentes liberam atenção ou criam nova fila de interrupções. [F12]' },
+      { icon: '📚', title: 'Conhecimento como capacidade compartilhada', summary: 'Uma decisão que só existe na memória precisa ser redescoberta.', detail: 'Documente motivos, restrições e caminhos de investigação. Uma descoberta recorrente precisa de um lugar estável — código, teste, decisão arquitetural ou procedimento — útil mesmo sem o autor por perto.', example: 'Software Engineering at Google descreve o custo de expertise concentrada e informação fragmentada. [F36]' },
+      { icon: '⚖️', title: 'Humildade técnica com decisão', summary: 'Admitir lacunas sem terceirizar toda decisão.', detail: 'Distinga o que verificou do que supõe. Agentes não compartilham memória por padrão: projete memória, acesso, continuidade e limites operacionais — uma intenção comunicada uma vez não estará disponível em todas as execuções.', example: '“Testado nestas condições; vem do contrato da plataforma; ainda é hipótese; precisa do responsável pelo domínio.”' },
+    ],
+    l2: { label: 'Responsabilidade ampliada na prática', title: 'Corrigir a resposta ou corrigir o sistema?', intro: 'Escolha uma resposta e veja como o problema evolui nas oito semanas seguintes (números ilustrativos).' },
+    scen: {
+      situation: 'Seu agente continua chamando uma API de pagamentos descontinuada. Você corrige — e na semana seguinte acontece de novo.',
+      question: 'O que você faz?',
+      label: 'Erros recorrentes por semana',
+      unit: 'semanas',
+      options: [
+        { label: 'Corrigir cada resposta à mão quando acontecer.', result: 'A tarefa imediata é resolvida toda vez — e o custo da sua atenção também se repete. Nada no sistema de trabalho mudou.', verdict: 'bad', series: [6, 6, 5, 6, 6, 5, 6, 6] },
+        { label: 'Trocar por um modelo maior e mais caro.', result: 'Talvez melhore um pouco, mas o modelo continua recuperando a mesma documentação antiga. A causa não era capacidade de raciocínio.', verdict: 'bad', series: [6, 5, 5, 4, 5, 4, 4, 4] },
+        { label: 'Acrescentar um lembrete no seu prompt pessoal.', result: 'Ajuda você, às vezes. Colegas e sessões novas não o veem, e nada verifica o comportamento.', verdict: 'ok', series: [6, 4, 3, 4, 3, 3, 4, 3] },
+        { label: 'Tornar explícita a versão correta, disponibilizar a documentação atual e adicionar uma verificação que falha com a API antiga.', result: 'A classe de erro desaparece para todos. A segunda intervenção modificou a capacidade do sistema de trabalho.', verdict: 'best', series: [6, 3, 1, 0, 0, 0, 0, 0] },
+      ],
+    },
+    l3: { label: 'Confiança baseada em evidências', title: 'Calibre quanta evidência cada tarefa merece', intro: 'Confiança não é uma configuração global “da IA”. Depende do que está sendo alterado. Classifique estas tarefas delegadas.' },
+    tbuckets: [
+      { id: 'light', label: 'Evidência leve basta', color: '#34d399', hint: 'Bem definida, pouca consequência, fácil de verificar' },
+      { id: 'strong', label: 'Exigir evidência forte', color: '#fb7185', hint: 'Autorização, concorrência, dados, difícil de reverter' },
+    ],
+    titems: [
+      { text: 'Atualizar a documentação de uma interface tipada e bem definida.', bucket: 'light', why: 'Delimitada, reversível e em grande parte verificável mecanicamente.' },
+      { text: 'Mudar quem pode exportar dados de clientes.', bucket: 'strong', why: 'Fronteiras de autorização exigem cenários que tentem atravessá-las.' },
+      { text: 'Renomear um módulo com tipos e suíte de testes passando.', bucket: 'light', why: 'Mecânico, verificado pelo compilador e pelos testes.' },
+      { text: 'Alterar a estratégia de bloqueio do decremento de estoque.', bucket: 'strong', why: 'Bugs de concorrência passam por revisões casuais e só aparecem sob disputa.' },
+      { text: 'Migrar a tabela de pedidos para um novo esquema.', bucket: 'strong', why: 'Mudanças de dados persistem; reverter o binário não as desfaz.' },
+      { text: 'Corrigir um erro de digitação numa mensagem de erro.', bucket: 'light', why: 'Consequência trivial e imediatamente observável.' },
+    ],
+    big: 'Que afirmação estou aceitando? Em que evidência ela se apoia? O que poderia mostrar que está errada?',
+    l4: { label: 'Ambição com disciplina de escopo', title: 'Três etapas, três níveis de evidência', intro: 'A velocidade da geração torna essa distinção mais necessária, não menos. Rotule seu trabalho com honestidade.' },
+    stages: [
+      ['Exploração', 'Aprender algo rápido: o fluxo é compreensível, é viável? Acabamento e evidência são mínimos de propósito.'],
+      ['Implementação candidata', 'Uma solução plausível em avaliação. Precisa de contratos, testes e uma lista honesta de perguntas em aberto.'],
+      ['Mudança pronta para operar', 'Verificada, observável, recuperável. A evidência corresponde ao risco e às consequências.'],
+    ],
+    takeaways: [
+      'Ancore sua identidade em <strong>resultado</strong>: descobrir o requisito decisivo pode valer mais que escrever o código.',
+      'Quando uma falha se repete, corrija o <strong>mecanismo</strong> com a menor melhoria verificável — não só a resposta.',
+      'Confiança é <strong>específica</strong>: exija evidência mais forte para autorização, concorrência e dados.',
+      'Explore com ousadia, mas rotule o trabalho como <strong>exploração, candidata ou pronta para operar</strong> e ajuste a evidência.',
+    ],
+    quiz: [
+      { q: 'Um agente produziu uma explicação elegante de por que uma migração é segura. O que deveria aumentar sua confiança?', options: ['O quão confiante a explicação soa.', 'Um teste, medição ou inspeção do estado real que poderia ter mostrado que está errada.', 'O tamanho do modelo.', 'Que um segundo agente concorde.'], answer: 1, explain: 'Confiança útil se apoia em evidência capaz de refutar a afirmação. Um segundo agente ajuda a explorar, mas compartilha muitos pontos cegos.' },
+      { q: 'Qual é o melhor exemplo de “responsabilidade ampliada”?', options: ['Revisar cada linha que o agente escreve.', 'Construir uma plataforma para cada problema recorrente.', 'Escolher a menor mudança que impeça, de forma verificável, a repetição de uma classe de falhas.', 'Assumir a culpa por todo incidente.'], answer: 2, explain: 'A responsabilidade inclui o mecanismo; o ponto é a menor melhoria que reduza a recorrência de forma verificável.' },
+      { q: 'Por que distinguir exploração de mudança pronta para operar?', options: ['Para desacelerar protótipos.', 'Porque cada etapa exige um nível diferente de acabamento e evidência.', 'Porque agentes só conseguem explorar.', 'Para facilitar relatórios.'], answer: 1, explain: 'Um protótipo impressionante que não reduz incerteza consome atenção e pode criar compromisso prematuro.' },
+    ],
+  },
+}[lang];
+---
+
+<Lesson n="3.1" label={c.l1.label} title={c.l1.title} wide>
+  <p slot="intro">{c.l1.intro}</p>
+  <CardDeck client:visible lang={lang} cards={c.traits} cols={4} />
+</Lesson>
+
+<Lesson n="3.2" label={c.l2.label} title={c.l2.title} wide>
+  <p slot="intro">{c.l2.intro}</p>
+  <Scenario client:visible lang={lang} situation={c.scen.situation} question={c.scen.question} options={c.scen.options as any} seriesLabel={c.scen.label} seriesUnit={c.scen.unit} />
+</Lesson>
+
+<BigStatement>{c.big}</BigStatement>
+
+<Lesson n="3.3" label={c.l3.label} title={c.l3.title} wide>
+  <p slot="intro">{c.l3.intro}</p>
+  <Sorter client:visible lang={lang} prompt={c.l3.label} buckets={c.tbuckets} items={c.titems} />
+</Lesson>
+
+<Lesson n="3.4" label={c.l4.label} title={c.l4.title} wide>
+  <p slot="intro">{c.l4.intro}</p>
+  <ol class="relative grid gap-4 md:grid-cols-3">
+    {c.stages.map(([t, b], i) => (
+      <li class="glass spotlight relative overflow-hidden p-6" data-reveal data-delay={String(i * 0.12)}>
+        <div class="mb-5 flex gap-1" aria-hidden="true">
+          {[0, 1, 2].map((k) => <span class={`h-1.5 flex-1 rounded-full ${k <= i ? 'bg-[var(--accent)]' : 'bg-white/10'}`} />)}
+        </div>
+        <h3 class="font-serif text-3xl">{t}</h3>
+        <p class="mt-2 text-zinc-400">{b}</p>
+      </li>
+    ))}
+  </ol>
+</Lesson>
+
+<Takeaways lang={lang} items={c.takeaways} />
+<section class="pb-10"><div class="container-x"><div data-reveal><Quiz client:visible lang={lang} questions={c.quiz} /></div></div></section>

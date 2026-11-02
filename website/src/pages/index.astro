@@ -1,0 +1,49 @@
+---
+import '../styles/global.css';
+import { UI } from '../i18n/ui';
+import { asset, homeUrl } from '../lib/paths';
+
+const site = Astro.site!;
+const en = new URL(homeUrl('en'), site).href;
+const pt = new URL(homeUrl('pt'), site).href;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#05050a" />
+    <title>{UI.en.siteName} · {UI.pt.siteName}</title>
+    <meta name="description" content={`${UI.en.siteDescription} / ${UI.pt.siteDescription}`} />
+    <link rel="canonical" href={en} />
+    <link rel="alternate" hreflang="en" href={en} />
+    <link rel="alternate" hreflang="pt-BR" href={pt} />
+    <link rel="alternate" hreflang="x-default" href={en} />
+    <meta name="robots" content="noindex, follow" />
+    <link rel="icon" type="image/svg+xml" href={asset('favicon.svg')} />
+    <meta property="og:image" content={new URL(asset('og-en.png'), site).href} />
+    <script is:inline define:vars={{ enHref: homeUrl('en'), ptHref: homeUrl('pt') }}>
+      // Pick the reader's language: explicit previous choice > browser language > English.
+      try {
+        var saved = localStorage.getItem('seai:lang');
+        var langs = navigator.languages || [navigator.language || 'en'];
+        var pref = saved || (langs.some(function (l) { return /^pt/i.test(l); }) ? 'pt' : 'en');
+        location.replace(pref === 'pt' ? ptHref : enHref);
+      } catch (e) {
+        location.replace(enHref);
+      }
+    </script>
+  </head>
+  <body class="grid min-h-screen place-items-center bg-ink-950 p-8 text-center text-zinc-300">
+    <main>
+      <img src={asset('favicon.svg')} alt="" width="56" height="56" class="mx-auto" />
+      <h1 class="display mt-6 text-5xl">{UI.en.siteName}</h1>
+      <p class="mt-2 font-serif text-2xl text-zinc-400 italic">{UI.pt.siteName}</p>
+      <nav class="mt-10 flex justify-center gap-3">
+        <a class="btn-primary" href={homeUrl('en')} hreflang="en" onclick="try{localStorage.setItem('seai:lang','en')}catch(e){}">English</a>
+        <a class="btn-ghost" href={homeUrl('pt')} hreflang="pt-BR" onclick="try{localStorage.setItem('seai:lang','pt')}catch(e){}">Português</a>
+      </nav>
+    </main>
+  </body>
+</html>

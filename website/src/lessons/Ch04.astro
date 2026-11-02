@@ -1,0 +1,135 @@
+---
+import Lesson from '../components/ui/Lesson.astro';
+import Callout from '../components/ui/Callout.astro';
+import Takeaways from '../components/ui/Takeaways.astro';
+import Sorter from '../components/islands/Sorter.tsx';
+import BeforeAfter from '../components/islands/BeforeAfter.tsx';
+import Quiz from '../components/islands/Quiz.tsx';
+import type { Lang } from '../data/chapters';
+
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+
+const COLORS = { preserve: '#60a5fa', deepen: '#a78bfa', learn: '#34d399', deprioritize: '#71717a' };
+
+const c = {
+  en: {
+    l1: { label: 'Four decisions', title: 'Where does your next learning hour go?', intro: 'The proposed curriculum sorts every competency into one of four moves. They describe <strong>marginal investment</strong>: a skill can remain necessary and still deserve less manual practice.' },
+    moves: [
+      ['preserve', 'Preserve', 'Keep the minimum mastery needed to understand the system and intervene.'],
+      ['deepen', 'Deepen', 'Invest more where your judgment steers many delegated decisions.'],
+      ['learn', 'Learn', 'Acquire new practices: context, tools, agents and evaluation.'],
+      ['deprioritize', 'Deprioritize', 'Spend less time on repetitive execution and easily replaced memorization.'],
+    ],
+    l2: { label: 'The competency map', title: 'Sort the competencies', intro: 'Place each competency where the report puts its <em>priority</em> move. Some deserve two moves; here you pick the main one.' },
+    items: [
+      { text: 'Understanding the user and the domain', bucket: 'deepen', why: 'Identifying the real need and turning it into criteria that represent value steers everything delegated downstream.' },
+      { text: 'Code reading and semantics', bucket: 'preserve', why: 'Preserve (and deepen): you must explain behavior, spot inconsistencies and investigate failures.' },
+      { text: 'Writing task specifications', bucket: 'learn', why: 'More explicit practices: turn goals into contracts, constraints and evidence of completion.' },
+      { text: 'Memorizing syntax and producing boilerplate', bucket: 'deprioritize', why: 'Automate and look things up — keep just enough understanding to evaluate.' },
+      { text: 'Architecture and interface design', bucket: 'deepen', why: 'Boundaries that allow evolution and independent execution become more valuable with abundant execution.' },
+      { text: 'Context engineering', bucket: 'learn', why: 'Making relevant, reliable, current information available at the right moment is a new practice.' },
+      { text: 'Algorithms, data and systems', bucket: 'preserve', why: 'Preserve with selective depth: judge scale, consistency, cost and the consequences of failures.' },
+      { text: 'Debugging and investigation', bucket: 'deepen', why: 'Producing distinguishable hypotheses and linking symptoms to causes is core judgment.' },
+      { text: 'Delegation and orchestration of agents', bucket: 'learn', why: 'Splitting work, calibrating autonomy and integrating results are new competencies.' },
+      { text: 'CI/CD, observability and operations', bucket: 'deepen', why: 'Closing the loop between change, validation, deployment and real effect.' },
+    ],
+    done: 'This matrix is a proposal of the report, not a statistical classification of sources — use it to guide study and practice.',
+    l3: { label: 'The center of gravity moves', title: 'From doing the task to making it solvable', intro: 'The contrast describes ways of organizing work — it doesn’t claim every engineer worked the same way a year ago.' },
+    before: 'Previous', after: 'Now',
+    pairs: [
+      ['Solve a task mainly through my own execution', 'Make the task solvable by a guided, verifiable execution system'],
+      ['Know enough detail to produce quickly', 'Know enough principles and context to direct, discriminate and correct'],
+      ['Review everything with the same procedure', 'Distribute verification by properties, risk and evidence'],
+      ['Improve my own speed', 'Improve the capacity of the flow and the team'],
+      ['Solve each difficulty again', 'Reduce recurrence through context, contracts, tools and tests'],
+      ['Study to grow my implementation repertoire', 'Study to grow domain mastery, delegation power and the reach of decisions'],
+    ],
+    note: 'Testing and agent evaluation, plus tool and environment security, sit at the intersection of <strong>deepen and learn</strong>: build on testing and security fundamentals, then add evals, permissions and sandboxing.',
+    takeaways: [
+      'Four moves — <strong>preserve, deepen, learn, deprioritize</strong> — describe where the next hour of study goes.',
+      'Deepen the competencies whose judgment guides many delegated decisions: <strong>domain, architecture, debugging, operations</strong>.',
+      'Learn the new practices: <strong>specification, context engineering, delegation, evaluation</strong>.',
+      'The center of gravity moves from <strong>doing the task</strong> to <strong>making it reliably solvable</strong>.',
+    ],
+    quiz: [
+      { q: 'What does “deprioritize” mean in the competency map?', options: ['The skill is useless now.', 'Spend less marginal study time on manual execution, keeping enough understanding to evaluate.', 'Delegate it and never look at it again.', 'Only juniors should learn it.'], answer: 1, explain: 'The categories describe marginal investment, not whether a skill matters at all.' },
+      { q: 'Which competency is primarily something to newly LEARN?', options: ['Debugging', 'Algorithms', 'Context engineering', 'Understanding the domain'], answer: 2, explain: 'Context engineering is a new practice; the others are fundamentals to preserve or deepen.' },
+    ],
+  },
+  pt: {
+    l1: { label: 'Quatro decisões', title: 'Para onde vai sua próxima hora de estudo?', intro: 'O currículo proposto organiza cada competência em um de quatro movimentos. Eles descrevem <strong>investimento marginal</strong>: uma habilidade pode continuar necessária e ainda merecer menos treino de execução manual.' },
+    moves: [
+      ['preserve', 'Conservar', 'Preservar o domínio mínimo necessário para entender o sistema e intervir.'],
+      ['deepen', 'Aprofundar', 'Investir mais onde seu julgamento orienta muitas decisões delegadas.'],
+      ['learn', 'Aprender', 'Adquirir práticas novas: contexto, ferramentas, agentes e avaliação.'],
+      ['deprioritize', 'Despriorizar', 'Reduzir tempo em execução repetitiva e memorização facilmente substituível.'],
+    ],
+    l2: { label: 'O mapa das competências', title: 'Classifique as competências', intro: 'Coloque cada competência onde o relatório situa seu movimento <em>prioritário</em>. Algumas merecem dois movimentos; aqui você escolhe o principal.' },
+    items: [
+      { text: 'Entendimento do usuário e do domínio', bucket: 'deepen', why: 'Identificar a necessidade real e transformá-la em critérios de valor orienta tudo o que é delegado depois.' },
+      { text: 'Leitura de código e semântica', bucket: 'preserve', why: 'Conservar (e aprofundar): é preciso explicar comportamento, perceber inconsistências e investigar falhas.' },
+      { text: 'Especificação de trabalho', bucket: 'learn', why: 'Práticas mais explícitas: transformar objetivos em contratos, restrições e evidências de conclusão.' },
+      { text: 'Memorizar sintaxe e produzir boilerplate', bucket: 'deprioritize', why: 'Automatizar e consultar — mantendo compreensão suficiente para avaliar.' },
+      { text: 'Arquitetura e desenho de interfaces', bucket: 'deepen', why: 'Fronteiras que permitem evolução e execução independente valem mais com execução abundante.' },
+      { text: 'Engenharia de contexto', bucket: 'learn', why: 'Disponibilizar informação pertinente, confiável e atual no momento certo é uma prática nova.' },
+      { text: 'Algoritmos, dados e sistemas', bucket: 'preserve', why: 'Conservar com profundidade seletiva: julgar escala, consistência, custo e consequências de falhas.' },
+      { text: 'Depuração e investigação', bucket: 'deepen', why: 'Produzir hipóteses discrimináveis e conectar sintomas a causas é julgamento central.' },
+      { text: 'Delegação e orquestração de agentes', bucket: 'learn', why: 'Dividir trabalho, calibrar autonomia e integrar resultados são competências novas.' },
+      { text: 'CI/CD, observabilidade e operação', bucket: 'deepen', why: 'Fechar o ciclo entre alteração, validação, implantação e efeito real.' },
+    ],
+    done: 'Esta matriz é uma proposta do relatório, não uma classificação estatística das fontes — use-a para orientar estudo e prática.',
+    l3: { label: 'O centro de gravidade se move', title: 'De fazer a tarefa a torná-la resolvível', intro: 'O contraste descreve modos de organizar o trabalho — não afirma que todos os engenheiros trabalhavam do mesmo jeito há um ano.' },
+    before: 'Antes', after: 'Agora',
+    pairs: [
+      ['Resolver uma tarefa principalmente pela própria execução', 'Tornar a tarefa resolvível por um sistema de execução orientado e verificável'],
+      ['Conhecer detalhes suficientes para produzir rapidamente', 'Conhecer princípios e contexto suficientes para dirigir, distinguir e corrigir'],
+      ['Revisar tudo pelo mesmo procedimento', 'Distribuir verificação segundo propriedades, risco e evidências'],
+      ['Melhorar a própria velocidade', 'Melhorar a capacidade do fluxo e da equipe'],
+      ['Resolver novamente cada dificuldade', 'Reduzir recorrência por contexto, contratos, ferramentas e testes'],
+      ['Estudar para aumentar repertório de implementação', 'Estudar para aumentar domínio, poder de delegação e alcance das decisões'],
+    ],
+    note: 'Testes e avaliação de agentes, assim como segurança de ferramentas e ambientes, ficam na interseção entre <strong>aprofundar e aprender</strong>: parta dos fundamentos de testes e segurança e acrescente evals, permissões e sandbox.',
+    takeaways: [
+      'Quatro movimentos — <strong>conservar, aprofundar, aprender, despriorizar</strong> — descrevem para onde vai a próxima hora de estudo.',
+      'Aprofunde as competências cujo julgamento orienta muitas decisões delegadas: <strong>domínio, arquitetura, depuração, operação</strong>.',
+      'Aprenda as práticas novas: <strong>especificação, engenharia de contexto, delegação, avaliação</strong>.',
+      'O centro de gravidade passa de <strong>fazer a tarefa</strong> para <strong>torná-la resolvível de forma confiável</strong>.',
+    ],
+    quiz: [
+      { q: 'O que significa “despriorizar” no mapa de competências?', options: ['A habilidade ficou inútil.', 'Gastar menos tempo marginal de estudo em execução manual, mantendo compreensão suficiente para avaliar.', 'Delegar e nunca mais olhar.', 'Só iniciantes deveriam aprender.'], answer: 1, explain: 'As categorias descrevem investimento marginal, não se a habilidade importa.' },
+      { q: 'Qual competência é principalmente algo a APRENDER?', options: ['Depuração', 'Algoritmos', 'Engenharia de contexto', 'Entendimento do domínio'], answer: 2, explain: 'Engenharia de contexto é uma prática nova; as demais são fundamentos a conservar ou aprofundar.' },
+    ],
+  },
+}[lang];
+
+const buckets = c.moves.map(([id, label, hint]) => ({ id, label, hint, color: COLORS[id as keyof typeof COLORS] }));
+---
+
+<Lesson n="4.1" label={c.l1.label} title={c.l1.title} wide>
+  <p slot="intro" set:html={c.l1.intro} />
+  <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    {c.moves.map(([id, label, body], i) => (
+      <div class="glass spotlight relative overflow-hidden p-6" style={`--accent:${COLORS[id as keyof typeof COLORS]}`} data-reveal data-delay={String(i * 0.08)}>
+        <span class="absolute -top-10 -right-10 h-32 w-32 rounded-full opacity-30 blur-2xl" style={`background:${COLORS[id as keyof typeof COLORS]}`} aria-hidden="true"></span>
+        <p class="eyebrow">0{i + 1}</p>
+        <h3 class="mt-3 font-serif text-4xl">{label}</h3>
+        <p class="mt-2 text-sm text-zinc-400">{body}</p>
+      </div>
+    ))}
+  </div>
+</Lesson>
+
+<Lesson n="4.2" label={c.l2.label} title={c.l2.title} wide>
+  <p slot="intro" set:html={c.l2.intro} />
+  <Sorter client:visible lang={lang} prompt={c.l2.label} buckets={buckets} items={c.items} doneText={c.done} />
+  <div class="max-w-3xl"><Callout kind="synthesis" lang={lang}><p set:html={c.note} /></Callout></div>
+</Lesson>
+
+<Lesson n="4.3" label={c.l3.label} title={c.l3.title} wide>
+  <p slot="intro">{c.l3.intro}</p>
+  <BeforeAfter client:visible lang={lang} before={c.before} after={c.after} pairs={c.pairs as [string, string][]} />
+</Lesson>
+
+<Takeaways lang={lang} items={c.takeaways} />
+<section class="pb-10"><div class="container-x"><div data-reveal><Quiz client:visible lang={lang} questions={c.quiz} /></div></div></section>

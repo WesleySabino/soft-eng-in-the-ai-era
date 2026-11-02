@@ -1,0 +1,74 @@
+---
+import Lesson from '../components/ui/Lesson.astro';
+import CopyBlock from '../components/islands/CopyBlock.tsx';
+import Checklist from '../components/islands/Checklist.tsx';
+import Glossary from '../components/islands/Glossary.tsx';
+import type { Lang } from '../data/chapters';
+import { glossary, repoMap, reviewQuestions, templateBlock } from '../lib/report';
+
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const A = templateBlock(lang, 'A');
+const B = repoMap(lang);
+const C = templateBlock(lang, 'C');
+const D = reviewQuestions(lang);
+const E = glossary(lang);
+const split = (t: string) => t.split(/\s+[—-]\s+/).slice(1).join(' — ') || t;
+
+const c = {
+  en: {
+    intro: 'Templates created for this report. Adapt them to the size and consequences of the task; fields that don’t help a decision can be removed.',
+    a: 'Copy it into your next delegated task. Every field exists to remove an ambiguity that would otherwise be guessed.',
+    b: 'What a short orientation file should cover. The map should point to the details — replicating content across files creates more places to maintain and reconcile.',
+    c: 'Turn each recurring failure into a verified improvement of the workflow.',
+    d: 'Use these questions to locate gaps, adjusting the depth to the change. Your ticks are saved in this browser.',
+    e: 'The vocabulary of the course.',
+    fileA: 'task-contract.txt', fileC: 'failure-log.txt',
+  },
+  pt: {
+    intro: 'Modelos elaborados para este relatório. Adapte-os ao tamanho e à consequência da tarefa; campos que não ajudam uma decisão podem ser removidos.',
+    a: 'Copie para sua próxima tarefa delegada. Cada campo existe para remover uma ambiguidade que, de outra forma, seria adivinhada.',
+    b: 'O que um arquivo curto de orientação deve cobrir. O mapa deve apontar para os detalhes — replicar conteúdo em vários arquivos cria mais lugares para manter e reconciliar.',
+    c: 'Transforme cada falha recorrente em uma melhoria verificada do fluxo.',
+    d: 'Use estas perguntas para localizar lacunas, ajustando a profundidade à mudança. Suas marcações ficam salvas neste navegador.',
+    e: 'O vocabulário do curso.',
+    fileA: 'contrato-da-tarefa.txt', fileC: 'registro-de-falha.txt',
+  },
+}[lang];
+const mapCards = B.rows.map((r) => ({ title: r.k, summary: r.v, detail: r.v }));
+---
+
+<div class="container-x pt-14"><p class="lead max-w-3xl" data-reveal>{c.intro}</p></div>
+
+<Lesson n="A" label={lang === 'en' ? 'Appendix A' : 'Apêndice A'} title={split(A.title)} wide>
+  <p slot="intro">{c.a}</p>
+  <CopyBlock client:visible lang={lang} title={c.fileA} code={A.code} />
+</Lesson>
+
+<Lesson n="B" label={lang === 'en' ? 'Appendix B' : 'Apêndice B'} title={split(B.title)} wide>
+  <p slot="intro">{c.b}</p>
+  <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    {mapCards.map((m, i) => (
+      <div class="glass spotlight p-5" data-reveal data-delay={String((i % 4) * 0.06)}>
+        <span class="font-mono text-xs text-[var(--accent)]">0{i + 1}</span>
+        <h3 class="mt-2 font-serif text-2xl">{m.title}</h3>
+        <p class="mt-1 text-sm text-zinc-400">{m.summary}</p>
+      </div>
+    ))}
+  </div>
+</Lesson>
+
+<Lesson n="C" label={lang === 'en' ? 'Appendix C' : 'Apêndice C'} title={split(C.title)} wide>
+  <p slot="intro">{c.c}</p>
+  <CopyBlock client:visible lang={lang} title={c.fileC} code={C.code} />
+</Lesson>
+
+<Lesson n="D" label={lang === 'en' ? 'Appendix D' : 'Apêndice D'} title={split(D.title)}>
+  <p slot="intro">{c.d}</p>
+  <Checklist client:visible lang={lang} items={D.items} storageKey="seai:review-checklist:v1" />
+</Lesson>
+
+<Lesson n="E" label={lang === 'en' ? 'Appendix E' : 'Apêndice E'} title={split(E.title)} wide>
+  <p slot="intro">{c.e}</p>
+  <Glossary client:visible lang={lang} terms={E.terms} />
+</Lesson>

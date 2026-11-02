@@ -1,0 +1,264 @@
+---
+import Lesson from '../components/ui/Lesson.astro';
+import Callout from '../components/ui/Callout.astro';
+import Takeaways from '../components/ui/Takeaways.astro';
+import BigStatement from '../components/ui/BigStatement.astro';
+import Quiz from '../components/islands/Quiz.tsx';
+import StepSim from '../components/islands/StepSim.tsx';
+import CopyBlock from '../components/islands/CopyBlock.tsx';
+import CardDeck from '../components/islands/CardDeck.tsx';
+import Checklist from '../components/islands/Checklist.tsx';
+import type { Lang } from '../data/chapters';
+
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+
+const sql = `-- Illustrative fragment: quantity must be validated as a positive integer.
+-- The customer's identity comes from authentication, not from the request body.
+UPDATE inventory
+SET available = available - :quantity
+WHERE tenant_id = :authenticated_tenant
+  AND item_id = :item_id
+  AND available >= :quantity
+RETURNING available;`;
+const sqlPt = `-- Fragmento ilustrativo: quantidade deve ser validada como inteira positiva.
+-- A identidade do cliente vem da autenticacao, nao do corpo da requisicao.
+UPDATE inventory
+SET available = available - :quantity
+WHERE tenant_id = :authenticated_tenant
+  AND item_id = :item_id
+  AND available >= :quantity
+RETURNING available;`;
+
+const c = {
+  en: {
+    scenario: '<strong>Illustrative scenario created for this course.</strong> An application lets customers of multiple organizations reserve units of an item, with simultaneous requests, retries after timeouts and an event that tells another service a reservation was created. The examples are not a production-ready implementation.',
+    l1: { label: 'The work starts with the contract', title: 'Name the invariants before delegating', intro: '“Create a reservation endpoint” leaves important decisions open. The engineer first identifies what must stay true — including under failure — and settles domain questions like expiration with the people who own them.' },
+    inv: ['Available quantity never becomes negative.', 'Within the key-retention window, repeating the same intent produces a single logical reservation.', 'Reusing a key with different content yields an explicitly defined result.', 'A customer can only act on their own data.', 'A partial failure never yields a reservation without a traceable event.', 'The outcome is discoverable when the connection drops after the database commit.'],
+    yamlTitle: 'reservation-contract.yaml',
+    yaml: `goal: "Reserve units of an item for the authenticated customer"
+scope:
+  includes: [reservation API, persistence, event, tests, telemetry]
+  excludes: [payment, changes to the fulfillment flow]
+invariants:
+  - "availability >= 0"
+  - "one logical reservation per customer and key during the retention window"
+  - "same key with a different payload produces a conflict"
+  - "no access to another customer's data"
+evidence:
+  - "test with concurrent requests competing for the last item"
+  - "retry test after commit and before the response"
+  - "isolation test between customers"
+  - "event publication recovery test"
+pending_decisions:
+  - "expiration policy for the reservation and the key"`,
+    pending: 'The contract is only ready for full implementation once the pending items that affect semantics are resolved.',
+    l2: { label: 'The atomicity boundary', title: 'Two requests, one last unit', intro: 'A naive solution reads availability and then writes the reduction: two requests can act on a premise that is no longer true. Step through both designs.' },
+    race: {
+      title: 'Race for the last unit',
+      actors: [{ id: 'a', label: 'Request A', color: '#a78bfa' }, { id: 'db', label: 'inventory row', color: '#22d3ee' }, { id: 'b', label: 'Request B', color: '#fbbf24' }],
+      labels: { available: 'available', lock: 'row lock', reserved: 'reservations granted' },
+      modes: [
+        { id: 'naive', label: 'Read, then write', outcome: { ok: false, text: 'Invariant broken: two reservations for one unit, availability = −1.' }, steps: [
+          { actor: 'a', text: 'SELECT available → 1', note: 'A reads the stock: one unit left.', state: { available: 1, lock: '—', reserved: 0 } },
+          { actor: 'b', text: 'SELECT available → 1', note: 'B reads at almost the same time — and also sees one unit.', state: { available: 1, lock: '—', reserved: 0 } },
+          { actor: 'a', text: '1 ≥ 1 ✓ → UPDATE available = available − 1', note: 'A checks its (still correct) premise and decrements.', state: { available: 0, lock: '—', reserved: 1 } },
+          { actor: 'b', text: '1 ≥ 1 ✓ (stale) → UPDATE available = available − 1', note: 'B acts on a premise that is no longer true.', state: { available: -1, lock: '—', reserved: 2 }, tone: 'bad' },
+        ] },
+        { id: 'cond', label: 'Conditional UPDATE', outcome: { ok: true, text: 'Exactly one reservation; availability never goes negative.' }, steps: [
+          { actor: 'a', text: 'UPDATE … WHERE available >= 1 RETURNING', note: 'A’s check and decrement happen in one statement; A locks the row.', state: { available: 0, lock: 'A', reserved: 1 } },
+          { actor: 'b', text: 'UPDATE … WHERE available >= 1 → waits', note: 'B targets the same row and must wait for A’s transaction.', state: { available: 0, lock: 'A', reserved: 1 }, tone: 'warn' },
+          { actor: 'a', text: 'COMMIT', note: 'A commits and releases the lock.', state: { available: 0, lock: '—', reserved: 1 } },
+          { actor: 'db', text: 're-evaluate WHERE on new row version: 0 ≥ 1 ✗', note: 'Under Read Committed, PostgreSQL re-checks the condition on the updated row version. [F28]', state: { available: 0, lock: 'B', reserved: 1 } },
+          { actor: 'b', text: '0 rows updated → reservation refused', note: 'B receives a defined “insufficient stock” result.', state: { available: 0, lock: '—', reserved: 1 }, tone: 'ok' },
+        ] },
+      ],
+    },
+    sqlTitle: 'conditional-update.sql',
+    notAlone: 'The fragment <strong>does not on its own</strong> solve idempotency, reservation creation, full authorization, expiration or events. One possible design: a single inventory row per <code>(tenant_id, item_id)</code>, a unique constraint on <code>(tenant_id, idempotency_key)</code>, and key coordination, conditional decrement, reservation, retrievable result and outbox insert in the <strong>same transaction</strong>.',
+    l3: { label: 'Partial failure', title: 'Writing the reservation and publishing the event are two operations', intro: 'If one happens and the other fails, systems diverge. The transactional outbox writes the event in the same transaction and publishes it later. Delivery may repeat; consumers must handle duplicates. [F30]' },
+    outbox: {
+      title: 'Database + broker',
+      actors: [{ id: 'svc', label: 'Reservation service', color: '#a78bfa' }, { id: 'db', label: 'Database', color: '#22d3ee' }, { id: 'broker', label: 'Broker → consumer', color: '#fbbf24' }],
+      labels: { reservation: 'reservation stored', event: 'event in outbox', delivered: 'consumer effects' },
+      modes: [
+        { id: 'dual', label: 'Dual write', outcome: { ok: false, text: 'A reservation exists that no other service will ever hear about.' }, steps: [
+          { actor: 'db', text: 'INSERT reservation; COMMIT', note: 'The reservation is stored.', state: { reservation: 'yes', event: '—', delivered: 0 } },
+          { actor: 'svc', text: '💥 process crashes', note: 'The service dies before publishing.', state: { reservation: 'yes', event: '—', delivered: 0 }, tone: 'bad' },
+          { actor: 'broker', text: '(nothing published)', note: 'There is nothing to retry: the event was never recorded anywhere.', state: { reservation: 'yes', event: '—', delivered: 0 }, tone: 'bad' },
+        ] },
+        { id: 'outbox', label: 'Transactional outbox', outcome: { ok: true, text: 'Reservation and event are consistent; a duplicate delivery produces no new effect.' }, steps: [
+          { actor: 'db', text: 'BEGIN; INSERT reservation; INSERT outbox(event e-91); COMMIT', note: 'Reservation and event are written atomically.', state: { reservation: 'yes', event: 'e-91 pending', delivered: 0 } },
+          { actor: 'svc', text: 'publisher: send e-91', note: 'A publisher reads the outbox and sends the event.', state: { reservation: 'yes', event: 'e-91 pending', delivered: 0 } },
+          { actor: 'broker', text: 'consumer applies e-91; records id e-91', note: 'The consumer records the event id and applies the effect in the same local transaction.', state: { reservation: 'yes', event: 'e-91 pending', delivered: 1 } },
+          { actor: 'svc', text: '💥 publisher crashes before marking e-91 sent', note: 'The broker accepted the event, but the outbox still shows it pending.', state: { reservation: 'yes', event: 'e-91 pending', delivered: 1 }, tone: 'warn' },
+          { actor: 'svc', text: 'publisher resumes: send e-91 again', note: 'Resumption repeats the message — at-least-once delivery.', state: { reservation: 'yes', event: 'e-91 pending', delivered: 1 } },
+          { actor: 'broker', text: 'e-91 already processed → skip', note: 'Deduplication prevents a second effect. The outbox alone doesn’t give exactly-once at the destination.', state: { reservation: 'yes', event: 'e-91 sent', delivered: 1 }, tone: 'ok' },
+        ] },
+      ],
+    },
+    l4: { label: 'Splitting the work', title: 'Fronts with defined interfaces', intro: 'These fronts can be people, agents or both — parallel only where dependencies allow. The initial investigation may reveal a domain decision that must come first.' },
+    fronts: [
+      { tag: 'Front 1', icon: '🔎', title: 'Investigation', summary: 'Map of the existing code and inventory rules.', detail: 'Understand the current behavior before changing it.', example: 'Integration condition: verified references to files and current behavior.' },
+      { tag: 'Front 2', icon: '🧱', title: 'Implementation', summary: 'API and persistence changes.', detail: 'Delegable execution within the contract.', example: 'Integration condition: agreed idempotency contract and schema.' },
+      { tag: 'Front 3', icon: '🧪', title: 'Verification', summary: 'Concurrency, retry and isolation scenarios.', detail: 'Evidence derived from the invariants, independent of the implementation.', example: 'Integration condition: criteria from the invariants, using a real database.' },
+      { tag: 'Front 4', icon: '📡', title: 'Operations', summary: 'Telemetry, migration and deployment plan.', detail: 'Make the change deployable and observable.', example: 'Integration condition: environment compatibility and defined failure signals.' },
+    ],
+    l5: { label: 'Evidence beyond the happy path', title: 'The seven scenarios the engineer asks for', intro: 'Mocks don’t demonstrate locking and isolation. Coordinate the relevant sequence with barriers — just firing requests together may not reproduce the race. When feasible, a deliberately racy version proves the test detects the defect. Check off what your own tests cover.' },
+    scen: ['Two requests race for the last unit: only one gets it.', 'Two requests with the same key: a single effect on stock.', 'Same key, different quantity: the specified conflict occurs.', 'Process dies after commit, before the response: the retry recovers the defined result.', 'A customer references another customer’s item: no exposure or mutation.', 'Broker accepts the event, publisher dies before recording it: resumption may repeat; consumer dedup prevents a new effect.', 'Reservation expires during concurrent operations: the agreed rule preserves consistency.'],
+    l6: { label: 'Deployable and observable', title: 'Ship with signals and stop conditions', intro: 'The delivery includes the change, a compatible migration, the tests and the operational signals — with evidence tied to the validated version. For a gradual rollout, watch reservation conflicts, latency, errors, outbox delays and invariant divergences, with abort conditions defined <em>before</em> exposure. Rolling back the binary does not undo a persisted data mutation. [F33]' },
+    big: 'The biggest human contribution was intent, concurrency, partial failure, contracts, independent evidence and operations. Implementation was a field of delegable execution inside those conditions.',
+    takeaways: [
+      'Start with <strong>invariants</strong> and resolve the domain decisions that change the semantics.',
+      'Put the check and the effect in the <strong>same atomic operation</strong>; read-then-write races.',
+      'Combine <strong>idempotency keys</strong>, a <strong>transactional outbox</strong> and <strong>consumer deduplication</strong> for partial failures.',
+      'Demand evidence <strong>beyond the happy path</strong> with real databases and coordinated concurrency — then record what you learned.',
+    ],
+    quiz: [
+      { q: 'Why can a read-then-write reservation sell the same last unit twice?', options: ['Because SQL is slow.', 'Both requests can act on a premise that stopped being true between read and write.', 'Because of missing indexes.', 'Because of the ORM.'], answer: 1, explain: 'The check and the effect must form one atomic boundary.' },
+      { q: 'What does the transactional outbox NOT guarantee by itself?', options: ['That the event is recorded with the reservation.', 'That the event will eventually be published.', 'Exactly-once effect at the consumer.', 'Consistency between reservation and event.'], answer: 2, explain: 'Delivery can repeat; consumers need deduplication or idempotent operations.' },
+      { q: 'Why aren’t mocks enough to test the concurrency scenario?', options: ['They are too slow.', 'They don’t demonstrate the database’s locking and isolation behavior.', 'They can’t return errors.', 'Agents can’t write them.'], answer: 1, explain: 'Exercise a real database and coordinate the sequence with barriers.' },
+    ],
+  },
+  pt: {
+    scenario: '<strong>Cenário ilustrativo criado para este curso.</strong> Uma aplicação permite que clientes de várias organizações reservem unidades de um item, com requisições simultâneas, repetições após timeout e um evento que informa outro serviço sobre a reserva criada. Os exemplos não são uma implementação pronta para produção.',
+    l1: { label: 'O trabalho começa pelo contrato', title: 'Nomeie os invariantes antes de delegar', intro: '“Crie um endpoint de reserva” deixa decisões importantes em aberto. O engenheiro identifica primeiro o que deve permanecer verdadeiro — inclusive sob falha — e resolve questões de domínio, como expiração, com quem é responsável por elas.' },
+    inv: ['A quantidade disponível nunca fica negativa.', 'Dentro da janela de retenção da chave, repetir a mesma intenção produz uma única reserva lógica.', 'Reutilizar a chave com conteúdo diferente gera um resultado explicitamente definido.', 'Um cliente só atua sobre seus próprios dados.', 'Uma falha parcial nunca produz reserva sem evento rastreável.', 'O resultado pode ser descoberto quando a conexão cai depois do commit.'],
+    yamlTitle: 'contrato-reserva.yaml',
+    yaml: `objetivo: "Reservar unidades de um item para o cliente autenticado"
+escopo:
+  inclui: [API de reserva, persistencia, evento, testes, telemetria]
+  exclui: [pagamento, alteracao do fluxo de expedicao]
+invariantes:
+  - "disponibilidade >= 0"
+  - "uma reserva logica por cliente e chave durante a janela de retencao"
+  - "mesma chave com payload diferente produz conflito"
+  - "nenhum acesso a dados de outro cliente"
+evidencias:
+  - "teste com requisicoes concorrentes disputando o ultimo item"
+  - "teste de repeticao apos commit e antes da resposta"
+  - "teste de isolamento entre clientes"
+  - "teste de recuperacao da publicacao do evento"
+decisoes_pendentes:
+  - "politica de expiracao da reserva e da chave"`,
+    pending: 'O contrato só estará pronto para implementação completa depois de resolver as pendências que afetam a semântica.',
+    l2: { label: 'A fronteira de atomicidade', title: 'Duas requisições, uma última unidade', intro: 'Uma solução ingênua lê a disponibilidade e depois grava a redução: duas requisições podem agir sobre uma premissa que deixou de ser verdadeira. Avance pelos dois desenhos.' },
+    race: {
+      title: 'Disputa pela última unidade',
+      actors: [{ id: 'a', label: 'Requisição A', color: '#a78bfa' }, { id: 'db', label: 'linha de estoque', color: '#22d3ee' }, { id: 'b', label: 'Requisição B', color: '#fbbf24' }],
+      labels: { available: 'disponível', lock: 'bloqueio da linha', reserved: 'reservas concedidas' },
+      modes: [
+        { id: 'naive', label: 'Ler, depois gravar', outcome: { ok: false, text: 'Invariante quebrado: duas reservas para uma unidade, disponibilidade = −1.' }, steps: [
+          { actor: 'a', text: 'SELECT available → 1', note: 'A lê o estoque: resta uma unidade.', state: { available: 1, lock: '—', reserved: 0 } },
+          { actor: 'b', text: 'SELECT available → 1', note: 'B lê quase ao mesmo tempo — e também vê uma unidade.', state: { available: 1, lock: '—', reserved: 0 } },
+          { actor: 'a', text: '1 ≥ 1 ✓ → UPDATE available = available − 1', note: 'A confere sua premissa (ainda correta) e decrementa.', state: { available: 0, lock: '—', reserved: 1 } },
+          { actor: 'b', text: '1 ≥ 1 ✓ (desatualizado) → UPDATE available = available − 1', note: 'B age sobre uma premissa que deixou de ser verdadeira.', state: { available: -1, lock: '—', reserved: 2 }, tone: 'bad' },
+        ] },
+        { id: 'cond', label: 'UPDATE condicional', outcome: { ok: true, text: 'Exatamente uma reserva; a disponibilidade nunca fica negativa.' }, steps: [
+          { actor: 'a', text: 'UPDATE … WHERE available >= 1 RETURNING', note: 'Verificação e decremento de A acontecem num só comando; A bloqueia a linha.', state: { available: 0, lock: 'A', reserved: 1 } },
+          { actor: 'b', text: 'UPDATE … WHERE available >= 1 → aguarda', note: 'B mira a mesma linha e precisa esperar a transação de A.', state: { available: 0, lock: 'A', reserved: 1 }, tone: 'warn' },
+          { actor: 'a', text: 'COMMIT', note: 'A confirma e libera o bloqueio.', state: { available: 0, lock: '—', reserved: 1 } },
+          { actor: 'db', text: 'reavalia WHERE na nova versão da linha: 0 ≥ 1 ✗', note: 'Em Read Committed, o PostgreSQL reavalia a condição sobre a versão atualizada da linha. [F28]', state: { available: 0, lock: 'B', reserved: 1 } },
+          { actor: 'b', text: '0 linhas atualizadas → reserva recusada', note: 'B recebe um resultado definido de “estoque insuficiente”.', state: { available: 0, lock: '—', reserved: 1 }, tone: 'ok' },
+        ] },
+      ],
+    },
+    sqlTitle: 'update-condicional.sql',
+    notAlone: 'O fragmento <strong>não resolve sozinho</strong> idempotência, criação da reserva, autorização completa, expiração ou eventos. Um desenho possível: uma única linha de estoque por <code>(tenant_id, item_id)</code>, restrição única em <code>(tenant_id, idempotency_key)</code>, e coordenação da chave, decremento condicional, reserva, resultado recuperável e inserção na outbox na <strong>mesma transação</strong>.',
+    l3: { label: 'Falha parcial', title: 'Gravar a reserva e publicar o evento são duas operações', intro: 'Se uma acontece e a outra falha, os sistemas divergem. A outbox transacional grava o evento na mesma transação e o publica depois. A entrega pode repetir; consumidores precisam lidar com duplicatas. [F30]' },
+    outbox: {
+      title: 'Banco + broker',
+      actors: [{ id: 'svc', label: 'Serviço de reservas', color: '#a78bfa' }, { id: 'db', label: 'Banco', color: '#22d3ee' }, { id: 'broker', label: 'Broker → consumidor', color: '#fbbf24' }],
+      labels: { reservation: 'reserva gravada', event: 'evento na outbox', delivered: 'efeitos no consumidor' },
+      modes: [
+        { id: 'dual', label: 'Escrita dupla', outcome: { ok: false, text: 'Existe uma reserva da qual nenhum outro serviço jamais saberá.' }, steps: [
+          { actor: 'db', text: 'INSERT reserva; COMMIT', note: 'A reserva é gravada.', state: { reservation: 'sim', event: '—', delivered: 0 } },
+          { actor: 'svc', text: '💥 processo cai', note: 'O serviço morre antes de publicar.', state: { reservation: 'sim', event: '—', delivered: 0 }, tone: 'bad' },
+          { actor: 'broker', text: '(nada publicado)', note: 'Não há o que repetir: o evento nunca foi registrado em lugar nenhum.', state: { reservation: 'sim', event: '—', delivered: 0 }, tone: 'bad' },
+        ] },
+        { id: 'outbox', label: 'Outbox transacional', outcome: { ok: true, text: 'Reserva e evento consistentes; uma entrega duplicada não produz novo efeito.' }, steps: [
+          { actor: 'db', text: 'BEGIN; INSERT reserva; INSERT outbox(evento e-91); COMMIT', note: 'Reserva e evento são gravados atomicamente.', state: { reservation: 'sim', event: 'e-91 pendente', delivered: 0 } },
+          { actor: 'svc', text: 'publicador: envia e-91', note: 'Um publicador lê a outbox e envia o evento.', state: { reservation: 'sim', event: 'e-91 pendente', delivered: 0 } },
+          { actor: 'broker', text: 'consumidor aplica e-91; registra id e-91', note: 'O consumidor registra o id e aplica o efeito na mesma transação local.', state: { reservation: 'sim', event: 'e-91 pendente', delivered: 1 } },
+          { actor: 'svc', text: '💥 publicador cai antes de marcar e-91 como enviado', note: 'O broker aceitou o evento, mas a outbox ainda o mostra pendente.', state: { reservation: 'sim', event: 'e-91 pendente', delivered: 1 }, tone: 'warn' },
+          { actor: 'svc', text: 'publicador retoma: envia e-91 de novo', note: 'A retomada repete a mensagem — entrega pelo menos uma vez.', state: { reservation: 'sim', event: 'e-91 pendente', delivered: 1 } },
+          { actor: 'broker', text: 'e-91 já processado → ignora', note: 'A deduplicação evita um segundo efeito. A outbox sozinha não garante efeito único no destino.', state: { reservation: 'sim', event: 'e-91 enviado', delivered: 1 }, tone: 'ok' },
+        ] },
+      ],
+    },
+    l4: { label: 'Dividindo o trabalho', title: 'Frentes com interfaces definidas', intro: 'Essas frentes podem ser pessoas, agentes ou ambos — em paralelo só onde as dependências permitem. A investigação inicial pode revelar uma decisão de domínio que precisa vir antes.' },
+    fronts: [
+      { tag: 'Frente 1', icon: '🔎', title: 'Investigação', summary: 'Mapa do código existente e das regras de estoque.', detail: 'Entender o comportamento atual antes de mudá-lo.', example: 'Condição de integração: referências verificadas a arquivos e ao comportamento atual.' },
+      { tag: 'Frente 2', icon: '🧱', title: 'Implementação', summary: 'Alteração de API e persistência.', detail: 'Execução delegável dentro do contrato.', example: 'Condição de integração: contrato de idempotência e esquema acordados.' },
+      { tag: 'Frente 3', icon: '🧪', title: 'Verificação', summary: 'Cenários de concorrência, repetição e isolamento.', detail: 'Evidências derivadas dos invariantes, independentes da implementação.', example: 'Condição de integração: critérios derivados dos invariantes, com banco real.' },
+      { tag: 'Frente 4', icon: '📡', title: 'Operação', summary: 'Telemetria, migração e plano de implantação.', detail: 'Tornar a mudança implantável e observável.', example: 'Condição de integração: compatibilidade com o ambiente e sinais de falha definidos.' },
+    ],
+    l5: { label: 'Evidência além do caminho feliz', title: 'Os sete cenários que o engenheiro pede', intro: 'Mocks não demonstram bloqueio e isolamento. Coordene a sequência relevante com barreiras — apenas lançar requisições juntas pode não reproduzir a disputa. Quando viável, uma versão deliberadamente vulnerável prova que o teste detecta o defeito. Marque o que seus testes cobrem.' },
+    scen: ['Duas requisições disputam a última unidade: só uma consegue.', 'Duas requisições com a mesma chave: um único efeito no estoque.', 'Mesma chave, outra quantidade: ocorre o conflito especificado.', 'O processo morre após o commit, antes da resposta: a repetição recupera o resultado definido.', 'Um cliente referencia o item de outro: sem exposição nem mutação.', 'O broker aceita o evento e o publicador morre antes de registrá-lo: a retomada pode repetir; a deduplicação do consumidor evita novo efeito.', 'A reserva expira durante operações concorrentes: a regra acordada preserva a consistência.'],
+    l6: { label: 'Implantável e observável', title: 'Entregue com sinais e condições de interrupção', intro: 'A entrega inclui a alteração, a migração compatível, os testes e os sinais de operação — com evidência vinculada à versão validada. Numa implantação gradual, acompanhe conflitos de reserva, latência, erros, atrasos na outbox e divergências de invariantes, com condições de interrupção definidas <em>antes</em> da exposição. Reverter o binário não desfaz uma mutação de dados já persistida. [F33]' },
+    big: 'A maior contribuição humana foi intenção, concorrência, falha parcial, contratos, evidência independente e operação. A implementação foi um campo de execução delegável dentro dessas condições.',
+    takeaways: [
+      'Comece pelos <strong>invariantes</strong> e resolva as decisões de domínio que mudam a semântica.',
+      'Coloque verificação e efeito na <strong>mesma operação atômica</strong>; ler-depois-gravar gera corrida.',
+      'Combine <strong>chaves de idempotência</strong>, <strong>outbox transacional</strong> e <strong>deduplicação no consumidor</strong> para falhas parciais.',
+      'Exija evidência <strong>além do caminho feliz</strong> com banco real e concorrência coordenada — e registre o que aprendeu.',
+    ],
+    quiz: [
+      { q: 'Por que uma reserva do tipo ler-depois-gravar pode vender duas vezes a última unidade?', options: ['Porque SQL é lento.', 'As duas requisições podem agir sobre uma premissa que deixou de ser verdadeira entre a leitura e a gravação.', 'Por falta de índices.', 'Por causa do ORM.'], answer: 1, explain: 'Verificação e efeito precisam formar uma única fronteira atômica.' },
+      { q: 'O que a outbox transacional NÃO garante sozinha?', options: ['Que o evento é gravado com a reserva.', 'Que o evento será publicado em algum momento.', 'Efeito único no consumidor.', 'Consistência entre reserva e evento.'], answer: 2, explain: 'A entrega pode repetir; consumidores precisam de deduplicação ou operações idempotentes.' },
+      { q: 'Por que mocks não bastam para testar o cenário de concorrência?', options: ['São lentos demais.', 'Não demonstram o comportamento de bloqueio e isolamento do banco.', 'Não conseguem devolver erros.', 'Agentes não conseguem escrevê-los.'], answer: 1, explain: 'Exercite um banco real e coordene a sequência com barreiras.' },
+    ],
+  },
+}[lang];
+---
+
+<div class="container-x pt-14"><div class="max-w-3xl"><Callout kind="example" lang={lang}><p set:html={c.scenario} /></Callout></div></div>
+
+<Lesson n="11.1" label={c.l1.label} title={c.l1.title} wide>
+  <p slot="intro">{c.l1.intro}</p>
+  <div class="grid gap-6 lg:grid-cols-[1fr_1.1fr]">
+    <ol class="space-y-3">
+      {c.inv.map((x, i) => (
+        <li class="flex gap-4 rounded-2xl border border-white/10 bg-white/[0.02] p-4" data-reveal="left" data-delay={String(i * 0.06)}>
+          <span class="font-mono text-xs text-[var(--accent)]">I{i + 1}</span>
+          <span class="text-zinc-200">{x}</span>
+        </li>
+      ))}
+    </ol>
+    <div data-reveal="right"><CopyBlock client:visible lang={lang} title={c.yamlTitle} code={c.yaml} /></div>
+  </div>
+  <p class="mt-4 text-sm text-zinc-500">{c.pending}</p>
+</Lesson>
+
+<Lesson n="11.2" label={c.l2.label} title={c.l2.title} wide>
+  <p slot="intro">{c.l2.intro}</p>
+  <StepSim client:visible lang={lang} title={c.race.title} actors={c.race.actors} modes={c.race.modes as any} stateLabels={c.race.labels} />
+  <div class="mt-8 grid gap-6 lg:grid-cols-2">
+    <CopyBlock client:visible lang={lang} title={c.sqlTitle} code={lang === 'en' ? sql : sqlPt} />
+    <Callout kind="synthesis" lang={lang}><p set:html={c.notAlone} /></Callout>
+  </div>
+</Lesson>
+
+<Lesson n="11.3" label={c.l3.label} title={c.l3.title} wide>
+  <p slot="intro">{c.l3.intro}</p>
+  <StepSim client:visible lang={lang} title={c.outbox.title} actors={c.outbox.actors} modes={c.outbox.modes as any} stateLabels={c.outbox.labels} />
+</Lesson>
+
+<Lesson n="11.4" label={c.l4.label} title={c.l4.title} wide>
+  <p slot="intro">{c.l4.intro}</p>
+  <CardDeck client:visible lang={lang} cards={c.fronts} cols={4} exampleLabel={lang === 'en' ? 'Integration condition' : 'Condição de integração'} />
+</Lesson>
+
+<Lesson n="11.5" label={c.l5.label} title={c.l5.title}>
+  <p slot="intro">{c.l5.intro}</p>
+  <Checklist client:visible lang={lang} items={c.scen} storageKey="seai:case-scenarios:v1" />
+</Lesson>
+
+<Lesson n="11.6" label={c.l6.label} title={c.l6.title}>
+  <p slot="intro" set:html={c.l6.intro} />
+</Lesson>
+
+<BigStatement>{c.big}</BigStatement>
+
+<Takeaways lang={lang} items={c.takeaways} />
+<section class="pb-10"><div class="container-x"><div data-reveal><Quiz client:visible lang={lang} questions={c.quiz} /></div></div></section>

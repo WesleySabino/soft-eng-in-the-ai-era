@@ -1,0 +1,164 @@
+---
+import Lesson from '../components/ui/Lesson.astro';
+import Callout from '../components/ui/Callout.astro';
+import Takeaways from '../components/ui/Takeaways.astro';
+import BigStatement from '../components/ui/BigStatement.astro';
+import Quiz from '../components/islands/Quiz.tsx';
+import LayerDiagnosis from '../components/islands/LayerDiagnosis.tsx';
+import ContractBuilder from '../components/islands/ContractBuilder.tsx';
+import CardDeck from '../components/islands/CardDeck.tsx';
+import Checklist from '../components/islands/Checklist.tsx';
+import Scenario from '../components/islands/Scenario.tsx';
+import Sorter from '../components/islands/Sorter.tsx';
+import type { Lang } from '../data/chapters';
+
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+
+const c = {
+  en: {
+    l1: { label: 'Model, agent, environment', title: 'Diagnose the layer before rewording the prompt', intro: 'The <strong>model</strong> produces responses and tool-use decisions. The <strong>agent</strong> organizes those interactions over a task. The <strong>environment</strong> provides files, processes, network, credentials and resources; the <em>harness</em> coordinates the loop. A deficiency can live in any layer.' },
+    l2: { label: 'Specifying delegable work', title: 'Build a task contract', intro: 'The more autonomy you intend, the more you must make explicit the ambiguities that would change the solution. Good contracts constrain important properties — and leave room to explore the implementation. Tools like GitHub’s Spec Kit organize this; the durable skill is formulating verifiable intent. [F27]' },
+    l3: { label: 'Context engineering', title: 'Three layers of context', intro: 'Context engineering is organizing the information available to the agent during the work — continuous curation, with on-demand retrieval. [F17] Each piece of information also needs a known <strong>source of authority</strong>.' },
+    layers: [
+      { tag: 'Layer 1', icon: '🗺️', title: 'Stable orientation', summary: '“Where am I and how do I work here?”', detail: 'Repository map, architecture, commands and fundamental rules. Short, maintained and pointing to the details rather than duplicating them.', example: 'A short orientation file that links to architecture decisions and lists the real commands to build, test and run.' },
+      { tag: 'Layer 2', icon: '🎯', title: 'Task context', summary: '“What do I need to accomplish and preserve?”', detail: 'Goal, decisions, relevant files, examples and constraints for this specific piece of work.', example: 'The task contract plus links to the two modules and the ADR that govern inventory.' },
+      { tag: 'Layer 3', icon: '📍', title: 'Execution state', summary: '“What has happened and what is left?”', detail: 'Changes, results, discarded hypotheses, open items and next steps — so a run can be resumed without redoing work.', example: '“Tests X and Y pass on commit abc123; hypothesis about cache discarded (trace link); next: migration script.”' },
+    ],
+    authority: 'A current architectural decision, a hypothesis recorded during an investigation and a suggestion found in an issue do not carry the same weight. Make results <strong>retrievable</strong>: “the tests passed” is weaker than which tests, against which version, with what result.',
+    l4: { label: 'Repository readiness', title: 'Could a fresh session work here alone?', intro: 'OpenAI’s <em>harness engineering</em> account describes a short orientation file acting as a map, isolated environments and access to execution signals. [F06] Check your own repository against this readiness list — the gaps are concrete improvement opportunities.' },
+    ready: ['A new executor can install dependencies from documented commands', 'The system can be started locally or in an isolated environment', 'The relevant checks can be run with one command each', 'Architectural boundaries and dependency rules are written down', 'Suitable test data is available and reproducible', 'There is a documented fallback when an external dependency is unavailable', 'An agent in a fresh session can reproduce a reported failure'],
+    l5: { label: 'Tools, APIs, CLI and MCP', title: 'Design tools an agent can use correctly', intro: 'Clear names, typed arguments, understandable results, useful errors and bounded operations. Test tool contracts on realistic tasks. [F18] MCP or a custom tool should solve an integration need — an existing well-documented CLI may be enough.' },
+    tool: {
+      situation: 'Agents need to deploy services. You are designing the tool they will call.',
+      question: 'Which interface do you expose?',
+      options: [
+        { label: 'run(command: string) → free text output', result: 'Maximum power, minimum structure. The agent can’t tell “accepted” from “completed”, and the blast radius is the whole shell.', verdict: 'bad' },
+        { label: 'deploy(env) → blocks up to 30 min, returns "ok" or "error"', result: 'Simpler, but timeouts leave the agent unsure whether the deploy happened, and retries may duplicate it.', verdict: 'ok' },
+        { label: 'deploy(env, version, operation_id) → {status: "accepted"} + get_status(operation_id)', result: 'Bounded, typed and recoverable: a queryable state distinguishes accepted from completed, and the operation id makes retries safe.', verdict: 'best' },
+      ],
+    },
+    l6: { label: 'Reusable procedures and skills', title: 'Turn recurring difficulty into a tested procedure', intro: 'A <em>skill</em> bundles instructions, scripts, examples and resources, loaded progressively by task. [F19] It needs criteria for use, inputs, expected outcome and verification. A procedure that has never been exercised is still a process hypothesis — and when a transformation is deterministic, let the agent run a script instead of regenerating the logic.' },
+    l7: { label: 'Decomposition and parallelism', title: 'Parallelize — or coordinate first?', intro: 'Performance of multi-agent systems depends on the fit between architecture, task and resources, with losses in misaligned setups. [F21] Sort each situation.' },
+    pbuckets: [
+      { id: 'par', label: 'Good to parallelize', color: '#34d399', hint: 'Independent fronts, agreed interfaces' },
+      { id: 'coord', label: 'Coordinate first', color: '#fbbf24', hint: 'Shared decisions, shared resources' },
+    ],
+    pitems: [
+      { text: 'Investigate three distinct subsystems for the cause of a slowdown.', bucket: 'par', why: 'Independent investigations whose results you compare later.' },
+      { text: 'Several agents changing the same Terraform module.', bucket: 'coord', why: 'Shared infrastructure collides; define one owner per change.' },
+      { text: 'Implement two modules against an interface already agreed.', bucket: 'par', why: 'The contract is settled; integration still verifies semantics.' },
+      { text: 'A migration that a second migration depends on.', bucket: 'coord', why: 'Dependent changes need ordering and a synchronization point.' },
+      { text: 'Review the same change for security, performance and accessibility risks.', bucket: 'par', why: 'Different lenses on one artifact parallelize well.' },
+      { text: 'Two fronts both blocked by an undecided API version.', bucket: 'coord', why: 'Resolve the shared decision (or give it an owner) before fanning out.' },
+    ],
+    worktree: 'Separate worktrees or clones, each with its own branch, plus isolated environments, reduce collisions. <strong>Branches alone don’t isolate two processes in the same working directory.</strong> And two changes can compile separately while contradicting the same business rule.',
+    big: 'Record goal, proven progress, decisions, blockers and next action. Stop loops with no observable progress.',
+    econ: 'Cost includes inference, tools, CI, waiting and human attention. The cheapest model per call can be expensive if it needs many corrections: compare <strong>cost per accepted result</strong> on your real task set. Model improvements can also make parts of an earlier harness unnecessary — revisit the process as tools evolve. [F07]',
+    takeaways: [
+      'Locate a failure in the right layer — <strong>model, agent/harness or environment</strong> — before changing the prompt.',
+      'A delegable task has a <strong>contract</strong>: outcome, behavior, invariants, trusted context, perimeter, evidence and escalation points.',
+      'Curate context in three layers and know the <strong>source of authority</strong> of each piece of information.',
+      'Design <strong>tools</strong> with typed, bounded, recoverable interfaces; parallelize only where dependencies allow.',
+    ],
+    quiz: [
+      { q: 'An agent keeps redoing work it discarded earlier in a long session. Which layer most likely needs fixing?', options: ['The model — use a bigger one.', 'The agent/harness — persist decisions and execution state.', 'The environment — add more CPU.', 'The prompt wording.'], answer: 1, explain: 'Continuity is a harness concern: record decisions, discarded hypotheses and next steps.' },
+      { q: 'Which is NOT one of the task contract questions?', options: ['What evidence will demonstrate completion?', 'Which situation requires a human decision?', 'Which class names must the agent use?', 'What is the perimeter of the change?'], answer: 2, explain: 'Good contracts constrain important properties and leave room to explore the implementation.' },
+      { q: 'Two agents work on separate branches in the same directory. Are they isolated?', options: ['Yes, branches isolate them.', 'No — use separate worktrees or clones and isolated environments.', 'Only if they use different models.', 'Yes, if CI is green.'], answer: 1, explain: 'Branches alone don’t isolate two processes sharing a working directory.' },
+    ],
+  },
+  pt: {
+    l1: { label: 'Modelo, agente, ambiente', title: 'Diagnostique a camada antes de reescrever o pedido', intro: 'O <strong>modelo</strong> produz respostas e decisões de uso de ferramentas. O <strong>agente</strong> organiza essas interações ao longo da tarefa. O <strong>ambiente</strong> fornece arquivos, processos, rede, credenciais e recursos; o <em>harness</em> coordena o ciclo. Uma deficiência pode estar em qualquer camada.' },
+    l2: { label: 'Especificar trabalho delegável', title: 'Monte um contrato de tarefa', intro: 'Quanto maior a autonomia pretendida, mais é preciso explicitar as ambiguidades que alteram a solução. Bons contratos restringem propriedades importantes — e deixam espaço para explorar a implementação. Ferramentas como o Spec Kit do GitHub organizam isso; a capacidade durável é formular intenção verificável. [F27]' },
+    l3: { label: 'Engenharia de contexto', title: 'Três camadas de contexto', intro: 'Engenharia de contexto é organizar a informação disponível ao agente durante o trabalho — curadoria contínua, com recuperação sob demanda. [F17] Cada informação também precisa de uma <strong>fonte de autoridade</strong> conhecida.' },
+    layers: [
+      { tag: 'Camada 1', icon: '🗺️', title: 'Orientação estável', summary: '“Onde estou e como trabalho aqui?”', detail: 'Mapa do repositório, arquitetura, comandos e regras fundamentais. Curto, mantido e apontando para os detalhes em vez de duplicá-los.', example: 'Um arquivo de orientação curto que aponta para decisões de arquitetura e lista os comandos reais de build, teste e execução.' },
+      { tag: 'Camada 2', icon: '🎯', title: 'Contexto da tarefa', summary: '“O que preciso realizar e preservar?”', detail: 'Objetivo, decisões, arquivos relevantes, exemplos e restrições desta tarefa específica.', example: 'O contrato da tarefa e links para os dois módulos e o ADR que regem o estoque.' },
+      { tag: 'Camada 3', icon: '📍', title: 'Estado da execução', summary: '“O que já aconteceu e o que falta?”', detail: 'Alterações, resultados, hipóteses descartadas, pendências e próximos passos — para retomar sem refazer trabalho.', example: '“Testes X e Y passam no commit abc123; hipótese de cache descartada (link do trace); próximo: script de migração.”' },
+    ],
+    authority: 'Uma decisão de arquitetura vigente, uma hipótese registrada numa investigação e uma sugestão encontrada numa issue não têm o mesmo peso. Torne resultados <strong>recuperáveis</strong>: “os testes passaram” é mais fraco que quais testes, sobre qual versão, com que resultado.',
+    l4: { label: 'Repositório preparado', title: 'Uma sessão nova conseguiria trabalhar aqui sozinha?', intro: 'O relato de <em>harness engineering</em> da OpenAI descreve um arquivo de orientação curto funcionando como mapa, ambientes isolados e acesso a sinais de execução. [F06] Confira seu repositório com esta lista — as lacunas são oportunidades concretas de melhoria.' },
+    ready: ['Um novo executor instala dependências por comandos documentados', 'O sistema pode ser iniciado localmente ou em ambiente isolado', 'As verificações relevantes rodam com um comando cada', 'Limites arquiteturais e regras de dependência estão escritos', 'Há dados de teste adequados e reproduzíveis', 'Existe alternativa documentada quando uma dependência externa está indisponível', 'Um agente em sessão nova consegue reproduzir uma falha relatada'],
+    l5: { label: 'Ferramentas, APIs, CLI e MCP', title: 'Projete ferramentas que o agente usa corretamente', intro: 'Nomes claros, argumentos tipados, resultados compreensíveis, erros úteis e operações delimitadas. Teste os contratos das ferramentas em tarefas realistas. [F18] MCP ou ferramenta própria devem resolver uma necessidade de integração — uma CLI bem documentada pode bastar.' },
+    tool: {
+      situation: 'Agentes precisam implantar serviços. Você está projetando a ferramenta que eles vão chamar.',
+      question: 'Que interface você expõe?',
+      options: [
+        { label: 'run(comando: string) → saída em texto livre', result: 'Poder máximo, estrutura mínima. O agente não distingue “aceito” de “concluído”, e o alcance do estrago é o shell inteiro.', verdict: 'bad' },
+        { label: 'deploy(env) → bloqueia até 30 min, devolve "ok" ou "erro"', result: 'Mais simples, mas timeouts deixam o agente sem saber se o deploy aconteceu, e repetições podem duplicá-lo.', verdict: 'ok' },
+        { label: 'deploy(env, versao, id_operacao) → {status: "aceito"} + consultar_status(id_operacao)', result: 'Delimitada, tipada e recuperável: um estado consultável distingue aceito de concluído, e o id torna repetições seguras.', verdict: 'best' },
+      ],
+    },
+    l6: { label: 'Procedimentos reutilizáveis e skills', title: 'Transforme dificuldade recorrente em procedimento testado', intro: 'Uma <em>skill</em> reúne instruções, scripts, exemplos e recursos, carregados progressivamente conforme a tarefa. [F19] Precisa de critérios de uso, entradas, resultado esperado e verificação. Um procedimento nunca exercitado ainda é uma hipótese de processo — e, quando uma transformação é determinística, deixe o agente executar um script em vez de regenerar a lógica.' },
+    l7: { label: 'Decomposição e paralelismo', title: 'Paralelizar — ou coordenar antes?', intro: 'O desempenho de sistemas com múltiplos agentes depende do alinhamento entre arquitetura, tarefa e recursos, com perdas em configurações desalinhadas. [F21] Classifique cada situação.' },
+    pbuckets: [
+      { id: 'par', label: 'Bom para paralelizar', color: '#34d399', hint: 'Frentes independentes, interfaces acordadas' },
+      { id: 'coord', label: 'Coordenar antes', color: '#fbbf24', hint: 'Decisões e recursos compartilhados' },
+    ],
+    pitems: [
+      { text: 'Investigar três subsistemas distintos em busca da causa de uma lentidão.', bucket: 'par', why: 'Investigações independentes cujos resultados você compara depois.' },
+      { text: 'Vários agentes alterando o mesmo módulo de Terraform.', bucket: 'coord', why: 'Infraestrutura compartilhada colide; defina um dono por alteração.' },
+      { text: 'Implementar dois módulos contra uma interface já acordada.', bucket: 'par', why: 'O contrato está definido; a integração ainda verifica a semântica.' },
+      { text: 'Uma migração da qual uma segunda migração depende.', bucket: 'coord', why: 'Mudanças dependentes precisam de ordem e ponto de sincronização.' },
+      { text: 'Revisar a mesma mudança quanto a riscos de segurança, desempenho e acessibilidade.', bucket: 'par', why: 'Lentes diferentes sobre um mesmo artefato paralelizam bem.' },
+      { text: 'Duas frentes bloqueadas pela mesma versão de API ainda indefinida.', bucket: 'coord', why: 'Resolva a decisão compartilhada (ou dê um dono a ela) antes de dividir.' },
+    ],
+    worktree: 'Worktrees ou clones separados, cada um com sua branch, e ambientes isolados reduzem colisões. <strong>Branches, sozinhas, não isolam dois processos no mesmo diretório de trabalho.</strong> E duas mudanças podem compilar separadamente e contradizer a mesma regra de negócio.',
+    big: 'Registre objetivo, progresso comprovado, decisões, bloqueios e próxima ação. Interrompa ciclos sem progresso observável.',
+    econ: 'O custo inclui inferência, ferramentas, CI, espera e atenção humana. O modelo mais barato por chamada pode sair caro se exigir muitas correções: compare <strong>custo por resultado aceito</strong> no seu conjunto real de tarefas. Melhorias de modelos também podem tornar partes de um harness anterior desnecessárias — revise o processo junto com as ferramentas. [F07]',
+    takeaways: [
+      'Localize a falha na camada certa — <strong>modelo, agente/harness ou ambiente</strong> — antes de mudar o pedido.',
+      'Uma tarefa delegável tem um <strong>contrato</strong>: resultado, comportamento, invariantes, contexto confiável, perímetro, evidências e pontos de escalonamento.',
+      'Organize o contexto em três camadas e conheça a <strong>fonte de autoridade</strong> de cada informação.',
+      'Projete <strong>ferramentas</strong> com interfaces tipadas, delimitadas e recuperáveis; paralelize só onde as dependências permitem.',
+    ],
+    quiz: [
+      { q: 'Um agente refaz trabalho que descartou antes, numa sessão longa. Que camada provavelmente precisa de ajuste?', options: ['O modelo — use um maior.', 'O agente/harness — persistir decisões e estado da execução.', 'O ambiente — mais CPU.', 'A redação do pedido.'], answer: 1, explain: 'Continuidade é responsabilidade do harness: registre decisões, hipóteses descartadas e próximos passos.' },
+      { q: 'Qual destas NÃO é uma pergunta do contrato de tarefa?', options: ['Que evidências demonstrarão conclusão?', 'Que situação exige decisão humana?', 'Quais nomes de classe o agente deve usar?', 'Qual é o perímetro da alteração?'], answer: 2, explain: 'Bons contratos restringem propriedades importantes e deixam espaço para explorar a implementação.' },
+      { q: 'Dois agentes trabalham em branches separadas no mesmo diretório. Estão isolados?', options: ['Sim, branches isolam.', 'Não — use worktrees ou clones separados e ambientes isolados.', 'Só se usarem modelos diferentes.', 'Sim, se o CI estiver verde.'], answer: 1, explain: 'Branches, sozinhas, não isolam dois processos que compartilham um diretório de trabalho.' },
+    ],
+  },
+}[lang];
+---
+
+<Lesson n="6.1" label={c.l1.label} title={c.l1.title} wide>
+  <p slot="intro" set:html={c.l1.intro} />
+  <LayerDiagnosis client:visible lang={lang} />
+</Lesson>
+
+<Lesson n="6.2" label={c.l2.label} title={c.l2.title} wide>
+  <p slot="intro">{c.l2.intro}</p>
+  <ContractBuilder client:visible lang={lang} />
+</Lesson>
+
+<Lesson n="6.3" label={c.l3.label} title={c.l3.title} wide>
+  <p slot="intro" set:html={c.l3.intro} />
+  <CardDeck client:visible lang={lang} cards={c.layers} cols={3} />
+  <div class="max-w-3xl"><Callout kind="synthesis" lang={lang}><p set:html={c.authority} /></Callout></div>
+</Lesson>
+
+<Lesson n="6.4" label={c.l4.label} title={c.l4.title}>
+  <p slot="intro" set:html={c.l4.intro} />
+  <Checklist client:visible lang={lang} items={c.ready} storageKey="seai:repo-ready:v1" />
+</Lesson>
+
+<Lesson n="6.5" label={c.l5.label} title={c.l5.title} wide>
+  <p slot="intro">{c.l5.intro}</p>
+  <Scenario client:visible lang={lang} situation={c.tool.situation} question={c.tool.question} options={c.tool.options as any} />
+</Lesson>
+
+<Lesson n="6.6" label={c.l6.label} title={c.l6.title}>
+  <p slot="intro" set:html={c.l6.intro} />
+</Lesson>
+
+<Lesson n="6.7" label={c.l7.label} title={c.l7.title} wide>
+  <p slot="intro">{c.l7.intro}</p>
+  <Sorter client:visible lang={lang} prompt={c.l7.label} buckets={c.pbuckets} items={c.pitems} />
+  <div class="max-w-3xl"><Callout kind="synthesis" lang={lang}><p set:html={c.worktree} /></Callout></div>
+</Lesson>
+
+<BigStatement>{c.big}</BigStatement>
+<div class="container-x -mt-10 pb-10"><div class="max-w-3xl"><Callout kind="evidence" lang={lang}><p set:html={c.econ} /></Callout></div></div>
+
+<Takeaways lang={lang} items={c.takeaways} />
+<section class="pb-10"><div class="container-x"><div data-reveal><Quiz client:visible lang={lang} questions={c.quiz} /></div></div></section>

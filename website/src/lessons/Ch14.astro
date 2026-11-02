@@ -1,0 +1,69 @@
+---
+import Lesson from '../components/ui/Lesson.astro';
+import Callout from '../components/ui/Callout.astro';
+import Takeaways from '../components/ui/Takeaways.astro';
+import Quiz from '../components/islands/Quiz.tsx';
+import PlanTimeline from '../components/islands/PlanTimeline.tsx';
+import type { Lang } from '../data/chapters';
+
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+
+const c = {
+  en: {
+    l1: { label: 'Your roadmap', title: 'Four phases on a real project', intro: 'An adaptable proposal, not a promise of proficiency in three months. Use a real project with authorized access and controlled impact. Phases can overlap — the criterion for advancing is the evidence obtained. Set the day you are on and tick deliverables as you go; everything is saved only in this browser.' },
+    adapt: [
+      ['Just starting out?', 'Reduce the scope of the system and increase the room for explaining and experimenting.'],
+      ['Already senior?', 'Choose a bottleneck that affects other people.'],
+      ['High-consequence area?', 'Concentrate the work in isolated environments until the relevant controls are demonstrated.'],
+    ],
+    cycle: 'The plan can be repeated in cycles. Each cycle, <strong>eliminate some repetitive execution and expand one capacity for judgment</strong> — that combination keeps the transition connected to real work, without turning the roadmap into bureaucracy.',
+    takeaways: [
+      'Start with <strong>one tool, real tasks and a baseline</strong> of where you intervene.',
+      'Make work <strong>delegable</strong>: repository map, task contracts, shared procedures.',
+      'Increase autonomy only <strong>with evidence</strong>: a small eval suite and an autonomy policy.',
+      'Finish by improving the <strong>team’s system</strong> — the benefit must survive your absence.',
+    ],
+    quiz: [
+      { q: 'What is the criterion for advancing after days 16–30?', options: ['You finished all tasks faster.', 'Another person or a fresh agent session can repeat the process without your verbal guidance.', 'You read the whole report.', 'You tried three new tools.'], answer: 1, explain: 'Delegable work means the knowledge lives in the repository and procedures, not in your head.' },
+      { q: 'How do you know the last phase succeeded?', options: ['Your personal velocity doubled.', 'The benefit survives your absence and shows up in others’ work or a better user result.', 'You automated everything.', 'Your manager approved it.'], answer: 1, explain: 'The goal is improving the team’s system, not only your own speed.' },
+    ],
+  },
+  pt: {
+    l1: { label: 'Seu roteiro', title: 'Quatro fases em um projeto real', intro: 'Uma proposta adaptável, não uma promessa de proficiência em três meses. Use um projeto real, com acesso autorizado e impacto controlado. As fases podem se sobrepor — o critério de avanço é a evidência obtida. Indique o dia em que está e marque as entregas; tudo fica salvo apenas neste navegador.' },
+    adapt: [
+      ['Está começando?', 'Reduza o escopo do sistema e aumente o espaço para explicar e experimentar.'],
+      ['Já é sênior?', 'Escolha um gargalo que afete outras pessoas.'],
+      ['Área de maior consequência?', 'Concentre o trabalho em ambientes isolados até que os controles relevantes estejam demonstrados.'],
+    ],
+    cycle: 'O plano pode ser retomado em ciclos. A cada ciclo, <strong>elimine alguma execução repetitiva e amplie uma capacidade de julgamento</strong> — essa combinação mantém a transição conectada ao trabalho real, sem transformar o roteiro em burocracia.',
+    takeaways: [
+      'Comece com <strong>uma ferramenta, tarefas reais e uma linha de base</strong> de onde você intervém.',
+      'Torne o trabalho <strong>delegável</strong>: mapa do repositório, contratos de tarefa, procedimentos compartilhados.',
+      'Aumente a autonomia só <strong>com evidência</strong>: uma pequena suíte de avaliação e uma política de autonomia.',
+      'Termine melhorando o <strong>sistema da equipe</strong> — o benefício precisa sobreviver à sua ausência.',
+    ],
+    quiz: [
+      { q: 'Qual é o critério de avanço depois dos dias 16–30?', options: ['Você concluiu tudo mais rápido.', 'Outra pessoa ou uma nova sessão do agente repete o processo sem suas orientações orais.', 'Você leu o relatório inteiro.', 'Você testou três ferramentas novas.'], answer: 1, explain: 'Trabalho delegável significa que o conhecimento vive no repositório e nos procedimentos, não na sua cabeça.' },
+      { q: 'Como saber que a última fase deu certo?', options: ['Sua velocidade pessoal dobrou.', 'O benefício sobrevive à sua ausência e aparece no trabalho de outros ou num resultado melhor para o usuário.', 'Você automatizou tudo.', 'Seu gestor aprovou.'], answer: 1, explain: 'O objetivo é melhorar o sistema da equipe, não só sua velocidade.' },
+    ],
+  },
+}[lang];
+---
+
+<Lesson n="14.1" label={c.l1.label} title={c.l1.title} wide>
+  <p slot="intro">{c.l1.intro}</p>
+  <PlanTimeline client:visible lang={lang} />
+  <div class="mt-10 grid gap-4 md:grid-cols-3">
+    {c.adapt.map(([t, b], i) => (
+      <div class="glass spotlight p-6" data-reveal data-delay={String(i * 0.08)}>
+        <h3 class="font-serif text-2xl">{t}</h3>
+        <p class="mt-2 text-sm text-zinc-400">{b}</p>
+      </div>
+    ))}
+  </div>
+  <div class="max-w-3xl"><Callout kind="synthesis" lang={lang}><p set:html={c.cycle} /></Callout></div>
+</Lesson>
+
+<Takeaways lang={lang} items={c.takeaways} />
+<section class="pb-10"><div class="container-x"><div data-reveal><Quiz client:visible lang={lang} questions={c.quiz} /></div></div></section>

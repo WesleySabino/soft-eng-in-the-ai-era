@@ -1,0 +1,21 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { UI } from '../i18n/ui';
+import { homeUrl } from '../lib/paths';
+---
+
+<Layout lang="en" title="404" description={UI.en.siteDescription} path="/404/" noindex>
+  <section class="relative grid min-h-[90svh] place-items-center overflow-hidden px-6 text-center">
+    <div class="aurora" aria-hidden="true"></div>
+    <div class="relative">
+      <p class="outline-number font-serif text-[10rem] leading-none sm:text-[16rem]" aria-hidden="true">404</p>
+      <h1 class="display text-4xl sm:text-6xl" data-split>{UI.en.notFound}</h1>
+      <p class="mt-2 font-serif text-2xl text-zinc-400 italic">{UI.pt.notFound}</p>
+      <p class="mx-auto mt-6 max-w-lg text-zinc-400">{UI.en.notFoundBody}</p>
+      <div class="mt-10 flex justify-center gap-3">
+        <a class="btn-primary" href={homeUrl('en')}>{UI.en.backHome}</a>
+        <a class="btn-ghost" href={homeUrl('pt')}>{UI.pt.backHome}</a>
+      </div>
+    </div>
+  </section>
+</Layout>

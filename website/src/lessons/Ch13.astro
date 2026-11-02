@@ -1,0 +1,143 @@
+---
+import Lesson from '../components/ui/Lesson.astro';
+import Callout from '../components/ui/Callout.astro';
+import Takeaways from '../components/ui/Takeaways.astro';
+import BigStatement from '../components/ui/BigStatement.astro';
+import Quiz from '../components/islands/Quiz.tsx';
+import Cycle from '../components/islands/Cycle.tsx';
+import CardDeck from '../components/islands/CardDeck.tsx';
+import type { Lang } from '../data/chapters';
+
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+
+const c = {
+  en: {
+    l1: { label: 'Production and learning have different goals', title: 'Receiving a solution ≠ understanding it', intro: 'In a 2026 experiment, 52 mostly junior engineers learned the Trio library. On the post-test, the AI group averaged 50% and the group without AI 67% — a 17-point gap. The small time difference was not statistically significant. [F15]' },
+    with: 'With AI assistance', without: 'Without AI', post: 'Post-test score',
+    limits: 'The study measures <strong>immediate learning on a limited task</strong>. Analysis of usage modes suggests value in interactions aimed at understanding, but those modes were not separately randomized. The practical guidance: when a gap compromises your ability to evaluate, design the activity for deliberate learning.',
+    l2: { label: 'A learning cycle that uses AI', title: 'Seven steps from gap to asset', intro: 'A proposal of this course: AI is your laboratory, not your answer key. Step through the cycle.' },
+    cycle: [
+      { title: 'Choose a concrete gap', body: 'Something that affected a recent decision: isolation, cancellation, caching, authorization, accessibility, profiling.' },
+      { title: 'Write down a prediction', body: 'Before consulting the answer, describe the expected behavior and your reasons.' },
+      { title: 'Use AI as a laboratory', body: 'Ask for small examples, variations, counterexamples and explanations connected to your system.' },
+      { title: 'Run and observe', body: 'Compare the prediction with concrete results.' },
+      { title: 'Rebuild the explanation', body: 'In your own words, with explicit conditions of validity.' },
+      { title: 'Solve a variant', body: 'Change inputs, scale or failure type to test transfer.' },
+      { title: 'Produce a useful asset', body: 'Turn the discovery into a test, decision note or procedure.' },
+    ],
+    center: 'Gap → understanding → asset',
+    hints: 'Ask for <strong>gradual hints</strong> instead of a full fix, or ask the model to critique an explanation <em>you</em> wrote. What matters is a demonstration of understanding that doesn’t depend on repeating the answer you just received.',
+    l3: { label: 'A sustainable agenda', title: 'Three levels of study', intro: 'The first two levels decide which tools deserve attention. If your biggest limit is understanding concurrency, switching editors won’t close the gap.' },
+    levels: [['Current tools', 'Features that let you carry out the practices better.', 30], ['Operational practices', 'Specification, context, delegation, verification and flow.', 65], ['Durable fundamentals', 'Reasoning about systems, data, algorithms, security and product.', 100]],
+    cadence: 'One or two short deliberate-learning sessions per week can be a starting point — a suggestion, not a scientifically optimal frequency. Progress means being able to explain, predict, detect and correct something that used to depend on trusting the model.',
+    l4: { label: 'Training people who are starting out', title: 'Make judgment visible — on purpose', intro: 'Include AI from the start, with tasks that expose the learner’s reasoning. If mechanical tasks are automated, training must create experiences of judgment deliberately.' },
+    mentor: [
+      { icon: '📝', title: 'Contract before generation', summary: 'Ask the learner to state the contract first.', detail: 'Formulating behavior, invariants and done-criteria before asking for code reveals how they understand the problem.', example: '“Before you prompt: what must stay true if two requests arrive together?”' },
+      { icon: '💥', title: 'Anticipate a failure', summary: 'Name one way it could break.', detail: 'Predicting a failure case builds the habit of thinking adversarially about one’s own work.', example: '“Which input would make this endpoint leak data?”' },
+      { icon: '🗣️', title: 'Explain a decision', summary: 'Why this approach and not another?', detail: 'Explaining forces the learner to separate what they verified from what they assumed.', example: '“Why a unique constraint instead of a check in code?”' },
+      { icon: '🔀', title: 'Diagnose a variant', summary: 'Change one condition and investigate.', detail: 'Variants test transfer rather than memorization of one answer.', example: '“Same feature, but the database is now a replica with lag.”' },
+      { icon: '🚢', title: 'Small, complete projects', summary: 'Requirement → implementation → test → deploy → effect.', detail: 'A complete loop preserves the relationship between the parts that automation can hide.', example: 'A tiny service the learner can explain, deploy, observe and operate.' },
+    ],
+    big: 'Progression happens through demonstrated responsibility — not through the volume of code produced.',
+    takeaways: [
+      'Design AI use by goal: <strong>producing</strong> familiar work and <strong>learning</strong> a gap need different interactions.',
+      'Use the seven-step cycle: <strong>predict, experiment, rebuild, vary, capture</strong>.',
+      'Fundamentals and practices decide which <strong>tools</strong> deserve your attention.',
+      'For juniors, create <strong>experiences of judgment</strong> deliberately; evaluate what they understand and control.',
+    ],
+    quiz: [
+      { q: 'In the Trio experiment, what did the AI-assisted group show?', options: ['Higher scores and much faster completion.', 'Lower immediate post-test scores (50% vs 67%), with no significant time difference.', 'No difference at all.', 'Better long-term retention.'], answer: 1, explain: 'It measured immediate learning on a limited task — a reason to design AI use for understanding when learning is the goal.' },
+      { q: 'What is the role of “write down a prediction” in the learning cycle?', options: ['It slows you down for no reason.', 'It creates something the real result can confirm or refute — exposing gaps in your model.', 'It replaces running the code.', 'It is only for juniors.'], answer: 1, explain: 'Comparing prediction and observation is what turns an answer into understanding.' },
+    ],
+  },
+  pt: {
+    l1: { label: 'Produção e formação têm objetivos diferentes', title: 'Receber uma solução ≠ compreendê-la', intro: 'Num experimento de 2026, 52 engenheiros, majoritariamente juniores, aprenderam a biblioteca Trio. No teste posterior, o grupo com IA teve média de 50% e o grupo sem IA, 67% — diferença de 17 pontos. A pequena diferença de tempo não foi estatisticamente significativa. [F15]' },
+    with: 'Com assistência de IA', without: 'Sem IA', post: 'Nota no teste posterior',
+    limits: 'O estudo mede <strong>aprendizagem imediata numa tarefa limitada</strong>. A análise dos modos de uso sugere valor em interações voltadas à compreensão, mas esses modos não foram randomizados separadamente. A orientação prática: quando uma lacuna compromete sua capacidade de avaliar, desenhe a atividade para aprendizagem deliberada.',
+    l2: { label: 'Um ciclo de aprendizagem com IA', title: 'Sete passos da lacuna ao ativo', intro: 'Uma proposta deste curso: a IA é seu laboratório, não seu gabarito. Percorra o ciclo.' },
+    cycle: [
+      { title: 'Escolha uma lacuna concreta', body: 'Algo que afetou uma decisão recente: isolamento, cancelamento, cache, autorização, acessibilidade, perfil de execução.' },
+      { title: 'Registre uma previsão', body: 'Antes de consultar a resposta, descreva o comportamento esperado e as razões.' },
+      { title: 'Use a IA como laboratório', body: 'Peça exemplos pequenos, variações, contraexemplos e explicações ligadas ao seu sistema.' },
+      { title: 'Execute e observe', body: 'Compare a previsão com resultados concretos.' },
+      { title: 'Reconstrua a explicação', body: 'Com suas palavras e condições de validade explícitas.' },
+      { title: 'Resolva uma variante', body: 'Mude entradas, escala ou tipo de falha para testar a transferência.' },
+      { title: 'Produza um ativo útil', body: 'Transforme a descoberta em teste, nota de decisão ou procedimento.' },
+    ],
+    center: 'Lacuna → entendimento → ativo',
+    hints: 'Peça <strong>pistas graduais</strong> em vez de uma correção completa, ou peça ao modelo para criticar uma explicação que <em>você</em> escreveu. O importante é uma demonstração de entendimento que não dependa de repetir a resposta recém-recebida.',
+    l3: { label: 'Uma agenda sustentável', title: 'Três níveis de estudo', intro: 'Os dois primeiros níveis decidem quais ferramentas merecem atenção. Se sua maior limitação é entender concorrência, trocar de editor não resolve a lacuna.' },
+    levels: [['Ferramentas atuais', 'Recursos que permitem executar as práticas melhor.', 30], ['Práticas operacionais', 'Especificação, contexto, delegação, verificação e fluxo.', 65], ['Fundamentos duráveis', 'Raciocínio sobre sistemas, dados, algoritmos, segurança e produto.', 100]],
+    cadence: 'Uma ou duas sessões curtas de aprendizagem deliberada por semana podem ser um ponto de partida — uma sugestão, não uma frequência cientificamente ótima. Progresso é conseguir explicar, prever, detectar e corrigir algo que antes dependia de confiar no modelo.',
+    l4: { label: 'Formar quem está começando', title: 'Torne o julgamento visível — de propósito', intro: 'Inclua IA desde o início, com tarefas que exponham o raciocínio do aprendiz. Se tarefas mecânicas são automatizadas, a formação precisa criar experiências de julgamento deliberadamente.' },
+    mentor: [
+      { icon: '📝', title: 'Contrato antes da geração', summary: 'Peça que o aprendiz formule o contrato primeiro.', detail: 'Formular comportamento, invariantes e critérios de conclusão antes de pedir código revela como ele entende o problema.', example: '“Antes do prompt: o que deve permanecer verdadeiro se duas requisições chegarem juntas?”' },
+      { icon: '💥', title: 'Antecipar uma falha', summary: 'Nomear uma forma de quebrar.', detail: 'Prever um caso de falha cria o hábito de pensar adversarialmente sobre o próprio trabalho.', example: '“Que entrada faria este endpoint vazar dados?”' },
+      { icon: '🗣️', title: 'Explicar uma decisão', summary: 'Por que esta abordagem e não outra?', detail: 'Explicar obriga o aprendiz a separar o que verificou do que supôs.', example: '“Por que uma restrição única em vez de uma checagem no código?”' },
+      { icon: '🔀', title: 'Diagnosticar uma variante', summary: 'Mude uma condição e investigue.', detail: 'Variantes testam transferência em vez de memorização de uma resposta.', example: '“Mesma funcionalidade, mas agora o banco é uma réplica com atraso.”' },
+      { icon: '🚢', title: 'Projetos pequenos e completos', summary: 'Requisito → implementação → teste → implantação → efeito.', detail: 'Um ciclo completo preserva a relação entre as partes que a automação pode esconder.', example: 'Um serviço pequeno que o aprendiz consegue explicar, implantar, observar e operar.' },
+    ],
+    big: 'A progressão acontece pela responsabilidade demonstrada — não pelo volume de código produzido.',
+    takeaways: [
+      'Desenhe o uso da IA conforme o objetivo: <strong>produzir</strong> trabalho conhecido e <strong>aprender</strong> uma lacuna pedem interações diferentes.',
+      'Use o ciclo de sete passos: <strong>prever, experimentar, reconstruir, variar, registrar</strong>.',
+      'Fundamentos e práticas decidem quais <strong>ferramentas</strong> merecem sua atenção.',
+      'Para iniciantes, crie <strong>experiências de julgamento</strong> de propósito; avalie o que eles compreendem e controlam.',
+    ],
+    quiz: [
+      { q: 'No experimento com a Trio, o que o grupo com IA mostrou?', options: ['Notas maiores e conclusão muito mais rápida.', 'Notas menores no teste imediato (50% vs 67%), sem diferença significativa de tempo.', 'Nenhuma diferença.', 'Melhor retenção de longo prazo.'], answer: 1, explain: 'O estudo mediu aprendizagem imediata numa tarefa limitada — razão para desenhar o uso da IA para compreensão quando aprender é o objetivo.' },
+      { q: 'Qual o papel de “registre uma previsão” no ciclo de aprendizagem?', options: ['Atrasa sem motivo.', 'Cria algo que o resultado real pode confirmar ou refutar — expondo lacunas do seu modelo.', 'Substitui executar o código.', 'É só para iniciantes.'], answer: 1, explain: 'Comparar previsão e observação é o que transforma uma resposta em entendimento.' },
+    ],
+  },
+}[lang];
+---
+
+<Lesson n="13.1" label={c.l1.label} title={c.l1.title} wide>
+  <p slot="intro">{c.l1.intro}</p>
+  <div class="glass grid gap-8 p-6 sm:p-8 md:grid-cols-[1fr_1.2fr] md:items-center" data-reveal>
+    <div class="flex h-64 items-end justify-center gap-10" role="img" aria-label={`${c.with}: 50%. ${c.without}: 67%.`}>
+      {[[c.with, 50, '#a78bfa'], [c.without, 67, '#22d3ee']].map(([l, v, col]) => (
+        <div class="flex h-full w-24 flex-col items-center justify-end gap-2">
+          <span class="display text-4xl" style={`color:${col}`} data-count={v} data-suffix="%">{v}%</span>
+          <div class="w-full overflow-hidden rounded-t-2xl" style={`height:${v}%`}><div class="h-full w-full origin-bottom rounded-t-2xl" style={`background:linear-gradient(to top, ${col}55, ${col})`} data-reveal="scale"></div></div>
+          <span class="text-center text-xs text-zinc-400">{l}</span>
+        </div>
+      ))}
+    </div>
+    <div>
+      <p class="font-mono text-xs tracking-widest text-zinc-500 uppercase">{c.post}</p>
+      <p class="display mt-2 text-7xl text-white">−17 <span class="text-3xl text-zinc-500">pp</span></p>
+      <Callout kind="evidence" lang={lang} source="Shen & Tamkin"><p set:html={c.limits} /></Callout>
+    </div>
+  </div>
+</Lesson>
+
+<Lesson n="13.2" label={c.l2.label} title={c.l2.title} wide>
+  <p slot="intro">{c.l2.intro}</p>
+  <Cycle client:visible lang={lang} steps={c.cycle} center={c.center} />
+  <div class="max-w-3xl"><Callout kind="synthesis" lang={lang}><p set:html={c.hints} /></Callout></div>
+</Lesson>
+
+<Lesson n="13.3" label={c.l3.label} title={c.l3.title}>
+  <p slot="intro">{c.l3.intro}</p>
+  <div class="flex flex-col items-center gap-3">
+    {c.levels.map(([t, b, w], i) => (
+      <div class="glass spotlight p-5 text-center" style={`width:${w}%;min-width:min(100%,18rem)`} data-reveal="scale" data-delay={String(i * 0.12)}>
+        <p class="font-serif text-2xl text-white">{t}</p>
+        <p class="mt-1 text-sm text-zinc-400">{b}</p>
+      </div>
+    ))}
+  </div>
+  <Callout kind="tip" lang={lang}><p>{c.cadence}</p></Callout>
+</Lesson>
+
+<Lesson n="13.4" label={c.l4.label} title={c.l4.title} wide>
+  <p slot="intro">{c.l4.intro}</p>
+  <CardDeck client:visible lang={lang} cards={c.mentor} cols={3} />
+</Lesson>
+
+<BigStatement>{c.big}</BigStatement>
+
+<Takeaways lang={lang} items={c.takeaways} />
+<section class="pb-10"><div class="container-x"><div data-reveal><Quiz client:visible lang={lang} questions={c.quiz} /></div></div></section>

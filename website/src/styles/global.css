@@ -1,0 +1,326 @@
+@import 'tailwindcss';
+@import '@fontsource-variable/inter';
+@import '@fontsource-variable/jetbrains-mono';
+@import '@fontsource/instrument-serif/400.css';
+@import '@fontsource/instrument-serif/400-italic.css';
+
+@theme {
+  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-serif: 'Instrument Serif', ui-serif, Georgia, serif;
+  --font-mono: 'JetBrains Mono Variable', ui-monospace, monospace;
+
+  --color-ink-950: #05050a;
+  --color-ink-900: #0a0a13;
+  --color-ink-800: #11111d;
+  --color-ink-700: #1a1a2a;
+  --color-ink-600: #26263a;
+
+  --color-violet: #a78bfa;
+  --color-cyan: #22d3ee;
+  --color-amber: #fbbf24;
+  --color-emerald: #34d399;
+  --color-rose: #fb7185;
+
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@layer base {
+  html {
+    color-scheme: dark;
+    background: var(--color-ink-950);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  html.lenis,
+  html.lenis body {
+    height: auto;
+  }
+  .lenis.lenis-smooth {
+    scroll-behavior: auto !important;
+  }
+  .lenis.lenis-stopped {
+    overflow: clip;
+  }
+  body {
+    @apply min-h-screen bg-ink-950 font-sans text-zinc-300;
+    font-feature-settings: 'cv11', 'ss01';
+  }
+  ::selection {
+    background: color-mix(in oklab, var(--accent, #a78bfa) 45%, transparent);
+    color: white;
+  }
+  :focus-visible {
+    outline: 2px solid var(--accent, #a78bfa);
+    outline-offset: 3px;
+    border-radius: 6px;
+  }
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply text-white;
+    text-wrap: balance;
+  }
+  p {
+    text-wrap: pretty;
+  }
+}
+
+/* Native cross-document view transitions (progressive enhancement, zero JS). */
+@view-transition {
+  navigation: auto;
+}
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 0.45s;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+}
+::view-transition-old(root) {
+  animation-name: vt-out;
+}
+::view-transition-new(root) {
+  animation-name: vt-in;
+}
+@keyframes vt-out {
+  to {
+    opacity: 0;
+    transform: translateY(-12px);
+    filter: blur(6px);
+  }
+}
+@keyframes vt-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+    filter: blur(6px);
+  }
+}
+
+@utility btn {
+  @apply inline-flex cursor-pointer items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold transition duration-300 select-none disabled:cursor-not-allowed disabled:opacity-40;
+}
+
+@layer components {
+  .container-x {
+    @apply mx-auto w-full max-w-6xl px-5 sm:px-8;
+  }
+  .prose-x {
+    @apply mx-auto w-full max-w-3xl px-5 sm:px-8;
+  }
+  .eyebrow {
+    @apply font-mono text-[0.7rem] font-medium uppercase tracking-[0.22em];
+    color: var(--accent, var(--color-violet));
+  }
+  .display {
+    @apply font-serif leading-[0.95] tracking-tight text-white;
+  }
+  .lead {
+    @apply text-lg leading-relaxed text-zinc-300 sm:text-xl;
+  }
+  .glass {
+    @apply rounded-3xl border border-white/10 bg-white/[0.035] backdrop-blur-xl;
+    box-shadow:
+      0 1px 0 0 rgb(255 255 255 / 0.06) inset,
+      0 30px 80px -40px rgb(0 0 0 / 0.8);
+  }
+  .chip {
+    @apply inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-zinc-300;
+  }
+  .btn-primary {
+    @apply btn text-ink-950;
+    background: linear-gradient(120deg, var(--accent, #a78bfa), color-mix(in oklab, var(--accent, #a78bfa) 55%, white));
+    box-shadow: 0 10px 40px -12px var(--accent, #a78bfa);
+  }
+  .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 16px 50px -12px var(--accent, #a78bfa);
+  }
+  .btn-ghost {
+    @apply btn border border-white/15 bg-white/5 text-white hover:border-white/30 hover:bg-white/10;
+  }
+  .gradient-text {
+    background: linear-gradient(100deg, #fff 10%, var(--accent, #a78bfa) 55%, #22d3ee 95%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .hairline {
+    background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.15), transparent);
+    height: 1px;
+  }
+  .kbd {
+    @apply rounded-md border border-white/15 bg-white/5 px-1.5 py-0.5 font-mono text-[0.75em] text-zinc-200;
+  }
+
+  /* Pointer-following spotlight for cards (CSS vars set by motion.ts). */
+  .spotlight {
+    position: relative;
+    isolation: isolate;
+  }
+  .spotlight::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    z-index: -1;
+    opacity: 0;
+    transition: opacity 0.4s;
+    background: radial-gradient(
+      420px circle at var(--mx, 50%) var(--my, 50%),
+      color-mix(in oklab, var(--accent, #a78bfa) 18%, transparent),
+      transparent 60%
+    );
+  }
+  .spotlight:hover::before {
+    opacity: 1;
+  }
+
+  /* Rich text: lesson prose and the original report text */
+  .rich {
+    @apply text-[1.05rem] leading-[1.8] text-zinc-300;
+  }
+  .rich > * + * {
+    @apply mt-5;
+  }
+  .rich h3 {
+    @apply mt-12 font-serif text-3xl text-white;
+  }
+  .rich h4 {
+    @apply mt-8 text-lg font-semibold text-white;
+  }
+  .rich strong {
+    @apply font-semibold text-white;
+  }
+  .rich em {
+    @apply text-zinc-200;
+  }
+  .rich a {
+    @apply text-white underline decoration-white/30 underline-offset-4 transition hover:decoration-[var(--accent)];
+  }
+  .rich ul {
+    @apply list-disc space-y-2 pl-6 marker:text-[var(--accent)];
+  }
+  .rich ol {
+    @apply list-decimal space-y-2 pl-6 marker:text-[var(--accent)];
+  }
+  .rich blockquote {
+    @apply border-l-2 pl-5 text-zinc-200 italic;
+    border-color: var(--accent);
+  }
+  .rich code {
+    @apply rounded bg-white/10 px-1.5 py-0.5 font-mono text-[0.85em] text-zinc-100;
+  }
+  .rich pre {
+    @apply overflow-x-auto rounded-2xl border border-white/10 bg-black/40 p-5 text-sm leading-relaxed;
+  }
+  .rich pre code {
+    @apply bg-transparent p-0;
+  }
+  .rich .table-wrap {
+    @apply overflow-x-auto rounded-2xl border border-white/10;
+  }
+  .rich table {
+    @apply w-full border-collapse text-left text-sm;
+  }
+  .rich th {
+    @apply bg-white/5 px-4 py-3 font-semibold text-white;
+  }
+  .rich td {
+    @apply border-t border-white/10 px-4 py-3 align-top;
+  }
+  .rich hr {
+    @apply my-10 border-white/10;
+  }
+}
+
+/* Progressive enhancement: only hide reveal targets once JS is confirmed and motion is allowed. */
+html.js.motion-ok [data-reveal] {
+  opacity: 0;
+}
+html.js.motion-ok [data-split] {
+  visibility: hidden;
+}
+
+.grain {
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  opacity: 0.06;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+.aurora {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  z-index: 0;
+}
+.aurora::before,
+.aurora::after {
+  content: '';
+  position: absolute;
+  width: 60vmax;
+  height: 60vmax;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.35;
+  animation: drift 22s ease-in-out infinite alternate;
+}
+.aurora::before {
+  background: radial-gradient(circle, var(--accent, #a78bfa), transparent 65%);
+  top: -25vmax;
+  left: -15vmax;
+}
+.aurora::after {
+  background: radial-gradient(circle, #22d3ee, transparent 65%);
+  bottom: -30vmax;
+  right: -20vmax;
+  opacity: 0.18;
+  animation-duration: 28s;
+}
+@keyframes drift {
+  to {
+    transform: translate3d(8vmax, 6vmax, 0) scale(1.1);
+  }
+}
+
+.marquee {
+  mask-image: linear-gradient(90deg, transparent, black 10%, black 90%, transparent);
+}
+.marquee-track {
+  animation: marquee 40s linear infinite;
+}
+@keyframes marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.outline-number {
+  -webkit-text-stroke: 1px color-mix(in oklab, var(--accent, #a78bfa) 70%, transparent);
+  color: transparent;
+}
+
+details.full-text > summary {
+  list-style: none;
+}
+details.full-text > summary::-webkit-details-marker {
+  display: none;
+}
+details.full-text[open] .chev {
+  transform: rotate(180deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}

@@ -1,0 +1,69 @@
+---
+import BigStatement from '../components/ui/BigStatement.astro';
+import { CHAPTERS, type Lang } from '../data/chapters';
+import { chapterUrl, homeUrl } from '../lib/paths';
+
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+
+const c = {
+  en: {
+    label: 'The definition',
+    def: 'The excellent engineer of the present converts relevant problems into verifiable outcomes — and increases the capacity of the system that performs that conversion.',
+    paras: [
+      ['Starts with AI', 'They start with AI execution wherever it can take on the work, make intent explicit and prepare the conditions for autonomy.'],
+      ['Uses depth to decide', 'They use technical depth to choose constraints, recognize failures and support decisions — producing evidence proportional to risk.'],
+      ['Shows in what disappears', 'Mechanical steps automated, failures that stop recurring, knowledge that becomes accessible, interventions no longer needed.'],
+    ],
+    close: 'The opportunity is to expand the reach of what can be built: explore more ideas, understand more systems, bring more solutions into reality. Taking it requires deliberately reorganizing your own learning — reducing replaceable execution, deepening judgment and turning experience into better working conditions for people and agents.',
+    next: 'Where to go next',
+    ctas: [['Draw your profile', 15], ['Start your 90-day plan', 14], ['Browse the sources', 17]],
+    home: 'Back to the journey map',
+  },
+  pt: {
+    label: 'A definição',
+    def: 'O excelente engenheiro do presente converte problemas relevantes em resultados verificáveis — e aumenta a capacidade do sistema que realiza essa conversão.',
+    paras: [
+      ['Começa pela IA', 'Começa pela execução com IA onde ela pode assumir o trabalho, explicita intenção e prepara condições para autonomia.'],
+      ['Usa profundidade para decidir', 'Usa profundidade técnica para escolher restrições, reconhecer falhas e sustentar decisões — produzindo evidência proporcional ao risco.'],
+      ['Aparece no que desaparece', 'Etapas mecânicas automatizadas, falhas que deixam de se repetir, conhecimento que se torna acessível, intervenções que já não são necessárias.'],
+    ],
+    close: 'A oportunidade é ampliar o alcance da construção: explorar mais ideias, compreender mais sistemas, levar mais soluções à realidade. Aproveitá-la exige reorganizar deliberadamente o próprio aprendizado — reduzir execução substituível, aprofundar julgamento e transformar experiência em melhores condições de trabalho para pessoas e agentes.',
+    next: 'Para onde ir agora',
+    ctas: [['Desenhe seu perfil', 15], ['Comece seu plano de 90 dias', 14], ['Explore as fontes', 17]],
+    home: 'Voltar ao mapa da jornada',
+  },
+}[lang];
+---
+
+<section class="relative overflow-hidden py-28 sm:py-40">
+  <div class="aurora" aria-hidden="true"></div>
+  <div class="relative container-x">
+    <p class="eyebrow" data-reveal>{c.label}</p>
+    <p class="display mt-8 text-[clamp(2.2rem,5.5vw,5rem)] leading-[1.05]" data-scrub>{c.def}</p>
+  </div>
+</section>
+
+<section class="py-16">
+  <div class="container-x grid gap-5 md:grid-cols-3">
+    {c.paras.map(([t, b], i) => (
+      <div class="glass spotlight p-7" data-reveal data-delay={String(i * 0.12)}>
+        <span class="font-serif text-6xl text-[var(--accent)] italic">{i + 1}</span>
+        <h2 class="mt-3 font-serif text-3xl">{t}</h2>
+        <p class="mt-3 leading-relaxed text-zinc-300">{b}</p>
+      </div>
+    ))}
+  </div>
+</section>
+
+<BigStatement>{c.close}</BigStatement>
+
+<section class="pb-16">
+  <div class="container-x">
+    <p class="eyebrow" data-reveal>{c.next}</p>
+    <div class="mt-6 flex flex-wrap gap-3" data-reveal>
+      {c.ctas.map(([label, id], i) => <a href={chapterUrl(lang, CHAPTERS[(id as number) - 1])} class={i === 0 ? 'btn-primary' : 'btn-ghost'}>{label} →</a>)}
+      <a href={homeUrl(lang)} class="btn-ghost">{c.home}</a>
+    </div>
+  </div>
+</section>

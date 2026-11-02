@@ -1,0 +1,8 @@
+{
+  "name": "Software Engineering in the AI Era",
+  "short_name": "SE · AI Era",
+  "icons": [{ "src": "favicon.svg", "sizes": "any", "type": "image/svg+xml" }],
+  "theme_color": "#05050a",
+  "background_color": "#05050a",
+  "display": "standalone"
+}

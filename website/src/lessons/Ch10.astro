@@ -1,0 +1,89 @@
+---
+import Lesson from '../components/ui/Lesson.astro';
+import Callout from '../components/ui/Callout.astro';
+import Takeaways from '../components/ui/Takeaways.astro';
+import Quiz from '../components/islands/Quiz.tsx';
+import CardDeck from '../components/islands/CardDeck.tsx';
+import type { Lang } from '../data/chapters';
+
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+
+const c = {
+  en: {
+    l1: { label: 'The common core', title: 'What every AI-era engineer needs', intro: 'Competent adoption starts with deep use of existing tools and with improving the development environment — not with building an agent runtime, training models or mastering all ML infrastructure.' },
+    core: ['Formulate tasks', 'Provide context', 'Operate tools', 'Choose verifications', 'Interpret results', 'Control access', 'Learn from failures', 'Keep the fundamentals of your systems'],
+    l2: { label: 'Three scopes of work', title: 'Which one is yours?', intro: 'Each scope adds priority knowledge on top of the core — and has its own practical evidence of mastery.' },
+    scopes: [
+      { tag: 'Scope 1', icon: '🛠️', title: 'Building software with AI', summary: 'Context, delegation, verification, permissions and delivery flow.', detail: 'You deliver complete changes with AI as your default execution engine.', example: 'Evidence of mastery: a complete change delivered with appropriate autonomy and reliable evidence.' },
+      { tag: 'Scope 2', icon: '🏗️', title: 'Platform engineer for agents', summary: 'Environments, integrations, identity, isolation, shared evaluation, observability.', detail: 'You build the substrate other teams’ agents run on.', example: 'Evidence of mastery: several teams carry out tasks with less setup and intervention.' },
+      { tag: 'Scope 3', icon: '✨', title: 'Product engineer for AI-powered behavior', summary: 'Behavior evaluation, retrieval, data quality, latency, cost and failures in use.', detail: 'Learn RAG, fine-tuning or specialized orchestration when they solve an observed problem — their value depends on freshness, accuracy, access, data distribution and cost, and each needs its own evaluation.', example: 'Evidence of mastery: demonstrated success on user tasks and regressions tracked in production.' },
+    ],
+    l3: { label: 'Selective depth', title: 'Breadth to follow a delivery, depth where judgment is hardest', intro: 'AI lets you broaden your area of work, but professional commitment should stay proportional to your ability to verify consequences.' },
+    depth: [['Data', 'Integrity, queries, schema evolution'], ['Frontend', 'Interaction, accessibility, perceived performance'], ['Platform', 'Reliability and isolation'], ['Systems', 'Resources and concurrency']],
+    bring: 'When a task crosses an area of impact that nobody masters well enough, the competent response includes <strong>bringing in the right expertise and recording the decision</strong>.',
+    takeaways: [
+      'The common core is about <strong>using</strong> existing tools deeply and improving the environment — not building ML infrastructure.',
+      'Know your <strong>scope</strong>: building with AI, building platforms for agents, or building AI-powered product behavior.',
+      'Combine breadth with <strong>selective depth</strong> where your judgment is hardest, and bring in expertise where it is missing.',
+    ],
+    quiz: [
+      { q: 'When should a product engineer learn RAG or fine-tuning?', options: ['Immediately, as a baseline skill.', 'When the technique solves an observed problem — and with its own evaluation.', 'Never.', 'Only after training a model from scratch.'], answer: 1, explain: 'Value depends on freshness, accuracy, access, data distribution and cost.' },
+      { q: 'A task crosses into security-critical territory nobody on the team masters. What is competent?', options: ['Let the agent decide.', 'Proceed and review later.', 'Bring in appropriate expertise and record the decision.', 'Split it among more agents.'], answer: 2, explain: 'Commitment should stay proportional to the ability to verify consequences.' },
+    ],
+  },
+  pt: {
+    l1: { label: 'O núcleo comum', title: 'O que todo engenheiro da era da IA precisa', intro: 'A adoção competente começa com uso profundo das ferramentas existentes e com a melhoria do ambiente de desenvolvimento — não com construir um runtime de agentes, treinar modelos ou dominar toda a infraestrutura de ML.' },
+    core: ['Formular tarefas', 'Fornecer contexto', 'Operar ferramentas', 'Escolher verificações', 'Interpretar resultados', 'Controlar acesso', 'Aprender com falhas', 'Manter os fundamentos dos seus sistemas'],
+    l2: { label: 'Três escopos de atuação', title: 'Qual é o seu?', intro: 'Cada escopo acrescenta conhecimento prioritário ao núcleo — e tem sua própria evidência prática de domínio.' },
+    scopes: [
+      { tag: 'Escopo 1', icon: '🛠️', title: 'Desenvolver software com IA', summary: 'Contexto, delegação, verificações, permissões e fluxo de entrega.', detail: 'Você entrega mudanças completas com a IA como motor de execução padrão.', example: 'Evidência de domínio: uma mudança completa entregue com autonomia adequada e evidência confiável.' },
+      { tag: 'Escopo 2', icon: '🏗️', title: 'Engenheiro de plataforma para agentes', summary: 'Ambientes, integrações, identidade, isolamento, avaliação compartilhada, observabilidade.', detail: 'Você constrói o substrato onde rodam os agentes de outras equipes.', example: 'Evidência de domínio: várias equipes executam tarefas com menos preparação e intervenção.' },
+      { tag: 'Escopo 3', icon: '✨', title: 'Engenheiro de produto com comportamento de IA', summary: 'Avaliação de comportamento, recuperação de informação, qualidade de dados, latência, custo e falhas em uso.', detail: 'Aprenda RAG, ajuste de modelos ou orquestração especializada quando resolvem um problema observado — o valor depende de atualização, precisão, acesso, distribuição de dados e custo, e cada técnica precisa de avaliação própria.', example: 'Evidência de domínio: sucesso demonstrado em tarefas de usuários e regressões acompanhadas em produção.' },
+    ],
+    l3: { label: 'Profundidade seletiva', title: 'Amplitude para acompanhar a entrega, profundidade onde o julgamento é mais difícil', intro: 'A IA permite ampliar sua área de atuação, mas o compromisso profissional deve continuar proporcional à capacidade de verificar consequências.' },
+    depth: [['Dados', 'Integridade, consultas, evolução de esquema'], ['Frontend', 'Interação, acessibilidade, desempenho percebido'], ['Plataforma', 'Confiabilidade e isolamento'], ['Sistemas', 'Recursos e concorrência']],
+    bring: 'Quando a tarefa atravessa uma área de impacto que ninguém domina o suficiente, a resposta competente inclui <strong>trazer a expertise adequada e registrar a decisão</strong>.',
+    takeaways: [
+      'O núcleo comum é <strong>usar</strong> profundamente as ferramentas existentes e melhorar o ambiente — não construir infraestrutura de ML.',
+      'Conheça seu <strong>escopo</strong>: desenvolver com IA, construir plataforma para agentes ou construir produto com comportamento de IA.',
+      'Combine amplitude com <strong>profundidade seletiva</strong> onde o julgamento é mais difícil, e traga expertise onde ela falta.',
+    ],
+    quiz: [
+      { q: 'Quando um engenheiro de produto deve aprender RAG ou ajuste de modelos?', options: ['Imediatamente, como base.', 'Quando a técnica resolve um problema observado — com avaliação própria.', 'Nunca.', 'Só depois de treinar um modelo do zero.'], answer: 1, explain: 'O valor depende de atualização, precisão, acesso, distribuição de dados e custo.' },
+      { q: 'Uma tarefa entra em território crítico de segurança que ninguém da equipe domina. O que é competente?', options: ['Deixar o agente decidir.', 'Seguir e revisar depois.', 'Trazer a expertise adequada e registrar a decisão.', 'Dividir entre mais agentes.'], answer: 2, explain: 'O compromisso deve ser proporcional à capacidade de verificar consequências.' },
+    ],
+  },
+}[lang];
+---
+
+<Lesson n="10.1" label={c.l1.label} title={c.l1.title} wide>
+  <p slot="intro">{c.l1.intro}</p>
+  <ul class="flex flex-wrap gap-3">
+    {c.core.map((x, i) => <li class="chip !px-5 !py-2.5 !text-sm" data-reveal="scale" data-delay={String(i * 0.06)}>{x}</li>)}
+  </ul>
+</Lesson>
+
+<Lesson n="10.2" label={c.l2.label} title={c.l2.title} wide>
+  <p slot="intro">{c.l2.intro}</p>
+  <CardDeck client:visible lang={lang} cards={c.scopes} cols={3} exampleLabel={lang === 'en' ? 'Evidence of mastery' : 'Evidência de domínio'} />
+</Lesson>
+
+<Lesson n="10.3" label={c.l3.label} title={c.l3.title} wide>
+  <p slot="intro">{c.l3.intro}</p>
+  <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    {c.depth.map(([t, b], i) => (
+      <div class="glass spotlight relative overflow-hidden p-6" data-reveal data-delay={String(i * 0.08)}>
+        <div class="flex h-24 items-end gap-1.5" aria-hidden="true">
+          {[30, 45, 35, 100, 40, 28].map((h, k) => <span class="flex-1 rounded-t-md" style={`height:${k === (i + 2) % 6 ? 100 : h}%;background:${k === (i + 2) % 6 ? 'var(--accent)' : 'rgb(255 255 255 / .1)'}`} />)}
+        </div>
+        <h3 class="mt-4 font-serif text-3xl">{t}</h3>
+        <p class="mt-1 text-sm text-zinc-400">{b}</p>
+      </div>
+    ))}
+  </div>
+  <div class="max-w-3xl"><Callout kind="synthesis" lang={lang}><p set:html={c.bring} /></Callout></div>
+</Lesson>
+
+<Takeaways lang={lang} items={c.takeaways} />
+<section class="pb-10"><div class="container-x"><div data-reveal><Quiz client:visible lang={lang} questions={c.quiz} /></div></div></section>

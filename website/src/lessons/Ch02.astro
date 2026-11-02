@@ -1,0 +1,169 @@
+---
+import Lesson from '../components/ui/Lesson.astro';
+import Callout from '../components/ui/Callout.astro';
+import Takeaways from '../components/ui/Takeaways.astro';
+import Stats from '../components/ui/Stats.astro';
+import CardDeck from '../components/islands/CardDeck.tsx';
+import Sorter from '../components/islands/Sorter.tsx';
+import Quiz from '../components/islands/Quiz.tsx';
+import type { Lang } from '../data/chapters';
+
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+
+const c = {
+  en: {
+    l1: { label: 'Reorganization is already happening', title: 'Two reports from the front line', intro: 'These are vendor accounts of specific experiences — not forecasts for your organization. Their value is showing that directing agents and redesigning the production system are already engineering work.' },
+    openai: { who: 'OpenAI · Feb 2026', title: 'A beta product built by agents', body: 'Agents generated the application, tests, documentation, infrastructure and tooling. Human work concentrated on preparing the environment, specifying intent and building feedback. [F06]' },
+    anth: { who: 'Anthropic · Oct 2026', title: 'Merged changes per day', may: 'May', sep: 'September', body: 'The bottleneck moved to development infrastructure, and version control was redesigned. The transferable lesson is to investigate your actual bottleneck — not to replace Git. [F39]' },
+    l2: { label: 'Three questions to keep apart', title: 'Capability ≠ productivity ≠ outcome', intro: 'A demo answers whether an agent <em>can</em> do something. It says nothing about whether your process got more efficient — or whether anything that matters improved. Classify each claim by the question it actually answers.' },
+    buckets: [
+      { id: 'cap', label: 'Capability', color: '#a78bfa', hint: 'Can the agent do the task?' },
+      { id: 'eff', label: 'Efficiency', color: '#22d3ee', hint: 'Did the process get more efficient?' },
+      { id: 'out', label: 'Outcome', color: '#fbbf24', hint: 'Did something that matters improve?' },
+    ],
+    items: [
+      { text: 'An agent fixes a bug end to end in a live demo.', bucket: 'cap', why: 'It proves the task is possible — not that it is cheaper, faster or better across your real work.' },
+      { text: 'Developers with access to an assistant completed more tasks in randomized field experiments.', bucket: 'eff', why: 'Tasks completed per unit of time is a process measure; it doesn’t capture all value or quality.' },
+      { text: 'Users finish onboarding faster and with fewer errors after the new flow shipped.', bucket: 'out', why: 'This is an effect on users — the thing the work was for.' },
+      { text: 'Commit-to-production lead time fell from five days to one.', bucket: 'eff', why: 'Flow got faster. Whether it produced better results is a separate question.' },
+      { text: 'Agents built a working C compiler in a research experiment.', bucket: 'cap', why: 'An impressive capability experiment, explicitly not a productivity study.' },
+      { text: 'Incidents caused by changes dropped by half over the quarter.', bucket: 'out', why: 'Fewer escaped failures is a consequence that matters to users and operators.' },
+      { text: 'Cost per accepted change, including review time, decreased.', bucket: 'eff', why: 'A process-efficiency measure that, unlike token cost, includes human attention.' },
+    ],
+    done: 'Measure cost, time, quality, rework and effect on users before claiming an improvement.',
+    l3: { label: 'What the research supports', title: 'Five studies, five kinds of evidence', intro: 'Every study answers a narrower question than a headline suggests. Open each one to see what it supports — and where its limits are.' },
+    stats: [
+      { value: 4867, label: 'developers in three randomized field experiments (2025)' },
+      { value: 26.08, decimals: 2, suffix: '%', label: 'more tasks completed (pooled estimate, standard error 10.3 pp)', color: '#22d3ee' },
+      { value: 400000, prefix: '~', label: 'agentic coding sessions analysed by Anthropic (Oct 2025–Apr 2026)', color: '#fbbf24' },
+      { value: 260, label: 'agent-system configurations tested across six benchmarks', color: '#34d399' },
+    ],
+    studies: [
+      { tag: 'DORA 2025', title: 'AI is an amplifier', summary: 'Nearly 5,000 respondents and 100+ hours of qualitative research.', detail: 'AI amplifies existing organizational strengths and difficulties; the working environment matters.', example: 'Observational survey and self-reports — there is no universal causal multiplier here. [F03]' },
+      { tag: 'Field experiments', title: '+26% tasks completed', summary: '4,867 developers at three companies with randomized access to a coding assistant.', detail: 'The pooled analysis estimated 26.08% more tasks completed, with a standard error of 10.3 percentage points.', example: 'Tools and tasks of 2025; completed tasks don’t measure all value or product quality. [F09]' },
+      { tag: 'DORA · Mar 2026', title: 'Effort shifts to verification', summary: '1,110 open-ended responses from Google engineers about Q3 2025.', detail: 'Faster generation can move effort toward auditing and verification.', example: 'One organization and qualitative data — not a causal measurement of the full flow. [F05]' },
+      { tag: 'Anthropic · Jun 2026', title: 'Expertise still pays', summary: '~400,000 sessions from ~235,000 people.', detail: 'Domain expertise is associated with greater success; human decisions concentrate on planning rather than execution.', example: 'Vendor study with session classification; local success doesn’t prove long-term quality in production. [F08]' },
+      { tag: 'Kim et al. · Apr 2026', title: 'More agents isn’t automatically better', summary: '260 configurations across six agent benchmarks.', detail: 'Task structure and coordination determine whether multiple agents help — misaligned setups can lose performance.', example: 'Experimental preprint; its percentages are not estimates of team productivity. [F21]' },
+    ],
+    limit: 'Relevant limitation',
+    l4: { label: 'The career implication', title: 'Where to invest your competence', intro: 'The evidence converges on a handful of places where human competence makes AI pay off. This course turns that convergence into a curriculum — without claiming any single study validates all of it.' },
+    invest: ['Mastery of the problem domain', 'Accessible context', 'Good interfaces', 'Verification', 'Work organization'],
+    metr: 'In February 2026, METR explained that participant and task selection, compensation changes and simultaneous use of agents made its new round of experiments hard to interpret. Separate <strong>human time</strong>, <strong>run duration</strong> and <strong>concurrent work</strong> — and don’t treat an older tool generation’s result as a permanent portrait of the profession. [F10]',
+    takeaways: [
+      'Real teams already reorganize around agents; the lesson to transfer is <strong>finding your actual bottleneck</strong>, not copying their tooling.',
+      'Keep three questions apart: <strong>can it?</strong> (capability), <strong>is it more efficient?</strong> (process), <strong>did it improve what matters?</strong> (outcome).',
+      'Every study has a scope: read the <strong>limits</strong> as carefully as the headline numbers.',
+      'The evidence points to investing in <strong>domain, context, interfaces, verification and work organization</strong>.',
+    ],
+    quiz: [
+      { q: 'A vendor shows an agent completing a complex migration in a demo. Which question does this answer?', options: ['Whether your team will be more productive.', 'Whether the agent can do that task.', 'Whether users will benefit.', 'Whether the migration will be cheaper.'], answer: 1, explain: 'A demonstration answers capability. Efficiency and outcome require observing cost, time, quality, rework and user effect.' },
+      { q: 'What is the main transferable lesson from Anthropic’s growth from ~2,500 to 30,000+ merged changes per day?', options: ['Every team should replace Git.', 'Version control is always the bottleneck.', 'Investigate where your real bottleneck moved.', 'More merges mean better outcomes.'], answer: 2, explain: 'The authors stress the load is exceptional. What transfers is the habit of finding the actual constraint.' },
+      { q: 'Why does METR’s 2026 update matter when reading productivity studies?', options: ['It proved AI slows developers down.', 'It shows that selection, compensation and concurrent agent use complicate measurement.', 'It shows benchmarks are useless.', 'It replaced the DORA metrics.'], answer: 1, explain: 'Human time, run duration and concurrent work must be distinguished; old results shouldn’t be treated as permanent truths.' },
+    ],
+  },
+  pt: {
+    l1: { label: 'A reorganização já acontece', title: 'Dois relatos da linha de frente', intro: 'São relatos de fornecedores sobre experiências específicas — não previsões para a sua organização. Seu valor é mostrar que dirigir agentes e redesenhar o sistema de produção já são trabalho de engenharia.' },
+    openai: { who: 'OpenAI · fev. 2026', title: 'Um produto em beta construído por agentes', body: 'Agentes geraram aplicação, testes, documentação, infraestrutura e ferramentas. O trabalho humano se concentrou em preparar o ambiente, especificar intenção e construir feedback. [F06]' },
+    anth: { who: 'Anthropic · out. 2026', title: 'Mudanças integradas por dia', may: 'Maio', sep: 'Setembro', body: 'O gargalo passou à infraestrutura de desenvolvimento, e o controle de versões foi redesenhado. A lição transferível é investigar o seu gargalo efetivo — não substituir o Git. [F39]' },
+    l2: { label: 'Três perguntas que precisam ficar separadas', title: 'Capacidade ≠ produtividade ≠ resultado', intro: 'Uma demonstração responde se um agente <em>consegue</em> fazer algo. Não diz se seu processo ficou mais eficiente — nem se algo importante melhorou. Classifique cada afirmação pela pergunta que ela realmente responde.' },
+    buckets: [
+      { id: 'cap', label: 'Capacidade', color: '#a78bfa', hint: 'O agente consegue fazer a tarefa?' },
+      { id: 'eff', label: 'Eficiência', color: '#22d3ee', hint: 'O processo ficou mais eficiente?' },
+      { id: 'out', label: 'Resultado', color: '#fbbf24', hint: 'Algo importante melhorou?' },
+    ],
+    items: [
+      { text: 'Um agente corrige um bug de ponta a ponta numa demonstração ao vivo.', bucket: 'cap', why: 'Prova que a tarefa é possível — não que é mais barata, rápida ou melhor no seu trabalho real.' },
+      { text: 'Desenvolvedores com acesso a um assistente concluíram mais tarefas em experimentos de campo randomizados.', bucket: 'eff', why: 'Tarefas concluídas por tempo é medida de processo; não captura todo o valor ou a qualidade.' },
+      { text: 'Usuários concluem o onboarding mais rápido e com menos erros depois do novo fluxo.', bucket: 'out', why: 'É um efeito nos usuários — aquilo para o qual o trabalho existe.' },
+      { text: 'O tempo do commit à produção caiu de cinco dias para um.', bucket: 'eff', why: 'O fluxo ficou mais rápido. Se produziu resultados melhores é outra pergunta.' },
+      { text: 'Agentes construíram um compilador C funcional em um experimento de pesquisa.', bucket: 'cap', why: 'Um experimento de capacidade impressionante, explicitamente não um estudo de produtividade.' },
+      { text: 'Os incidentes causados por mudanças caíram pela metade no trimestre.', bucket: 'out', why: 'Menos falhas escapadas é uma consequência que importa a usuários e operação.' },
+      { text: 'O custo por mudança aceita, incluindo tempo de revisão, diminuiu.', bucket: 'eff', why: 'Medida de eficiência do processo que, ao contrário do custo por token, inclui atenção humana.' },
+    ],
+    done: 'Meça custo, tempo, qualidade, retrabalho e efeito no usuário antes de afirmar uma melhoria.',
+    l3: { label: 'O que a pesquisa sustenta', title: 'Cinco estudos, cinco tipos de evidência', intro: 'Cada estudo responde a uma pergunta mais estreita do que a manchete sugere. Abra cada um para ver o que ele sustenta — e onde estão seus limites.' },
+    stats: [
+      { value: 4867, label: 'desenvolvedores em três experimentos de campo randomizados (2025)' },
+      { value: 26.08, decimals: 2, suffix: '%', label: 'mais tarefas concluídas (estimativa combinada, erro-padrão de 10,3 p.p.)', color: '#22d3ee' },
+      { value: 400000, prefix: '~', label: 'sessões de programação com agentes analisadas pela Anthropic (out. 2025–abr. 2026)', color: '#fbbf24' },
+      { value: 260, label: 'configurações de sistemas de agentes testadas em seis benchmarks', color: '#34d399' },
+    ],
+    studies: [
+      { tag: 'DORA 2025', title: 'A IA é um amplificador', summary: 'Quase 5.000 respondentes e mais de 100 horas de investigação qualitativa.', detail: 'A IA amplifica capacidades e dificuldades organizacionais; o ambiente de trabalho importa.', example: 'Pesquisa observacional e relatos — não há um multiplicador causal universal. [F03]' },
+      { tag: 'Experimentos de campo', title: '+26% de tarefas concluídas', summary: '4.867 desenvolvedores em três empresas, com acesso aleatório a assistente de código.', detail: 'A análise combinada estimou 26,08% mais tarefas concluídas, com erro-padrão de 10,3 pontos percentuais.', example: 'Ferramentas e tarefas de 2025; tarefas concluídas não medem todo o valor ou a qualidade de um produto. [F09]' },
+      { tag: 'DORA · mar. 2026', title: 'O esforço migra para a verificação', summary: '1.110 respostas abertas de engenheiros do Google sobre o 3º tri. de 2025.', detail: 'A aceleração da geração pode deslocar esforço para auditoria e verificação.', example: 'Um contexto organizacional e dados qualitativos — não é medição causal do fluxo completo. [F05]' },
+      { tag: 'Anthropic · jun. 2026', title: 'Expertise continua rendendo', summary: '~400 mil sessões de ~235 mil pessoas.', detail: 'Expertise de domínio se associa a maior sucesso; decisões humanas se concentram mais no planejamento que na execução.', example: 'Estudo do fornecedor, com classificação de sessões; sucesso local não comprova qualidade longitudinal em produção. [F08]' },
+      { tag: 'Kim et al. · abr. 2026', title: 'Mais agentes não é automaticamente melhor', summary: '260 configurações em seis benchmarks de agentes.', detail: 'A estrutura da tarefa e a coordenação determinam se múltiplos agentes ajudam — configurações desalinhadas podem perder desempenho.', example: 'Preprint experimental; seus percentuais não são estimativas de produtividade de equipes. [F21]' },
+    ],
+    limit: 'Limite relevante',
+    l4: { label: 'A implicação para a carreira', title: 'Onde investir sua competência', intro: 'As evidências convergem para alguns pontos onde a competência humana faz a IA render. Este curso transforma essa convergência em currículo — sem atribuir a qualquer estudo a validação de todo ele.' },
+    invest: ['Domínio do problema', 'Contexto acessível', 'Boas interfaces', 'Verificação', 'Organização do trabalho'],
+    metr: 'Em fevereiro de 2026, a METR explicou que seleção de participantes e tarefas, mudanças na remuneração e uso simultâneo de agentes dificultavam interpretar sua nova rodada de experimentos. Separe <strong>tempo humano</strong>, <strong>duração da execução</strong> e <strong>trabalho concorrente</strong> — e não trate o resultado de uma geração anterior de ferramentas como retrato permanente da profissão. [F10]',
+    takeaways: [
+      'Equipes reais já se reorganizam em torno de agentes; a lição transferível é <strong>encontrar o seu gargalo efetivo</strong>, não copiar as ferramentas delas.',
+      'Mantenha três perguntas separadas: <strong>consegue?</strong> (capacidade), <strong>ficou mais eficiente?</strong> (processo), <strong>melhorou o que importa?</strong> (resultado).',
+      'Todo estudo tem um escopo: leia os <strong>limites</strong> com o mesmo cuidado que os números da manchete.',
+      'As evidências apontam para investir em <strong>domínio, contexto, interfaces, verificação e organização do trabalho</strong>.',
+    ],
+    quiz: [
+      { q: 'Um fornecedor mostra um agente concluindo uma migração complexa numa demonstração. Que pergunta isso responde?', options: ['Se sua equipe será mais produtiva.', 'Se o agente consegue fazer essa tarefa.', 'Se os usuários vão se beneficiar.', 'Se a migração ficará mais barata.'], answer: 1, explain: 'Uma demonstração responde à capacidade. Eficiência e resultado exigem observar custo, tempo, qualidade, retrabalho e efeito no usuário.' },
+      { q: 'Qual é a principal lição transferível do salto da Anthropic de ~2.500 para mais de 30.000 mudanças integradas por dia?', options: ['Toda equipe deveria substituir o Git.', 'O controle de versões é sempre o gargalo.', 'Investigar para onde seu gargalo real se deslocou.', 'Mais integrações significam melhores resultados.'], answer: 2, explain: 'Os autores ressaltam que a carga é excepcional. O que se transfere é o hábito de encontrar a restrição efetiva.' },
+      { q: 'Por que a atualização da METR em 2026 importa ao ler estudos de produtividade?', options: ['Provou que a IA deixa desenvolvedores mais lentos.', 'Mostra que seleção, remuneração e uso simultâneo de agentes complicam a medição.', 'Mostra que benchmarks são inúteis.', 'Substituiu as métricas DORA.'], answer: 1, explain: 'Tempo humano, duração da execução e trabalho concorrente precisam ser distinguidos; resultados antigos não são verdades permanentes.' },
+    ],
+  },
+}[lang];
+---
+
+<Lesson n="2.1" label={c.l1.label} title={c.l1.title} wide>
+  <p slot="intro">{c.l1.intro}</p>
+  <div class="grid gap-5 lg:grid-cols-2">
+    <article class="glass spotlight p-7" data-reveal>
+      <p class="eyebrow">{c.openai.who}</p>
+      <h3 class="display mt-3 text-3xl">{c.openai.title}</h3>
+      <div class="mt-6 grid grid-cols-5 gap-2" aria-hidden="true">
+        {['App', 'Tests', 'Docs', 'Infra', 'Tools'].map((x, i) => (
+          <div class="rounded-xl border border-white/10 bg-white/[0.03] py-3 text-center font-mono text-[0.65rem] text-zinc-300" data-reveal="scale" data-delay={String(0.1 * i)}>🤖<br />{x}</div>
+        ))}
+      </div>
+      <p class="mt-5 leading-relaxed text-zinc-300">{c.openai.body}</p>
+    </article>
+    <article class="glass spotlight p-7" style="--accent:#22d3ee" data-reveal data-delay="0.1">
+      <p class="eyebrow">{c.anth.who}</p>
+      <h3 class="display mt-3 text-3xl">{c.anth.title}</h3>
+      <div class="mt-6 space-y-4">
+        <div>
+          <div class="flex justify-between font-mono text-xs text-zinc-400"><span>{c.anth.may}</span><span data-count="2500" data-locale={lang === 'pt' ? 'pt-BR' : 'en-US'} data-prefix="~">~2,500</span></div>
+          <div class="mt-1.5 h-3 overflow-hidden rounded-full bg-white/5"><div class="h-full rounded-full bg-[var(--accent)]/60" data-bar="8" style="width:8%"></div></div>
+        </div>
+        <div>
+          <div class="flex justify-between font-mono text-xs text-zinc-400"><span>{c.anth.sep}</span><span data-count="30000" data-locale={lang === 'pt' ? 'pt-BR' : 'en-US'} data-suffix="+">30,000+</span></div>
+          <div class="mt-1.5 h-3 overflow-hidden rounded-full bg-white/5"><div class="h-full rounded-full bg-[var(--accent)]" data-bar="100" data-delay="0.2" style="width:100%"></div></div>
+        </div>
+      </div>
+      <p class="mt-5 leading-relaxed text-zinc-300">{c.anth.body}</p>
+    </article>
+  </div>
+</Lesson>
+
+<Lesson n="2.2" label={c.l2.label} title={c.l2.title} wide>
+  <p slot="intro" set:html={c.l2.intro} />
+  <Sorter client:visible lang={lang} prompt={c.l2.label} buckets={c.buckets} items={c.items} doneText={c.done} />
+</Lesson>
+
+<Lesson n="2.3" label={c.l3.label} title={c.l3.title} wide>
+  <p slot="intro">{c.l3.intro}</p>
+  <Stats lang={lang} items={c.stats} />
+  <div class="mt-6"><CardDeck client:visible lang={lang} cards={c.studies} cols={3} exampleLabel={c.limit} /></div>
+</Lesson>
+
+<Lesson n="2.4" label={c.l4.label} title={c.l4.title}>
+  <p slot="intro">{c.l4.intro}</p>
+  <ul class="flex flex-wrap gap-3">
+    {c.invest.map((x, i) => <li class="chip !px-5 !py-2.5 !text-sm" data-reveal="scale" data-delay={String(i * 0.07)}>{x}</li>)}
+  </ul>
+  <Callout kind="evidence" lang={lang} source="METR"><p set:html={c.metr} /></Callout>
+</Lesson>
+
+<Takeaways lang={lang} items={c.takeaways} />
+<section class="pb-10"><div class="container-x"><div data-reveal><Quiz client:visible lang={lang} questions={c.quiz} /></div></div></section>

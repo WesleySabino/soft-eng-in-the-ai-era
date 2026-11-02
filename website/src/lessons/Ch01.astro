@@ -1,0 +1,144 @@
+---
+import Lesson from '../components/ui/Lesson.astro';
+import Callout from '../components/ui/Callout.astro';
+import Takeaways from '../components/ui/Takeaways.astro';
+import BigStatement from '../components/ui/BigStatement.astro';
+import CardDeck from '../components/islands/CardDeck.tsx';
+import Pipeline from '../components/islands/Pipeline.tsx';
+import Quiz from '../components/islands/Quiz.tsx';
+import type { Lang } from '../data/chapters';
+
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+
+const c = {
+  en: {
+    l1: { label: 'The essence of the manifesto', title: 'Three shifts happen at once', intro: 'The manifesto that grounds this course describes three complementary changes. Open each card to see what changes — and what it asks of you.' },
+    shifts: [
+      { tag: 'Individual', icon: '🧭', title: 'Your role changes', summary: 'From writing code to directing models and agents.', detail: 'The engineer makes intent explicit, provides the conditions for execution, recognizes limits and turns recurring failures into improvements of the working system. The ambition: autonomous, continuous progress with less repetitive intervention.', example: 'Instead of fixing the agent’s output for the fifth time, you add the missing context or check so the sixth run doesn’t need you.' },
+      { tag: 'Flow', icon: '⚙️', title: 'The delivery flow changes', summary: 'Faster implementation moves the bottleneck elsewhere.', detail: 'Specifications, integration, tests, CI, review, approval and deployment all need to be reconsidered. Sometimes the job is redesigning an entire stage, because speeding up one activity no longer produces a meaningful gain.', example: 'Code is ready in an hour but waits three days for review and a staging slot. The next improvement isn’t a faster model.' },
+      { tag: 'Collective', icon: '🤝', title: 'Responsibility becomes shared', summary: 'Context, tools and practices must benefit the team.', detail: 'Useful context, automations and practices need to reach everyone. Some improvements depend on organizational investment — and identifying those dependencies is also part of the engineer’s job.', example: 'Your clever prompt lives in your notes. A tested, shared skill lives in the repository and helps the whole team.' },
+    ],
+    premise: 'The manifesto <strong>preserves</strong> expertise, architecture, documentation, testing and human accountability. Its proposal is to redistribute effort so that this competence can steer a much larger execution capacity. [F01]',
+    l2: { label: 'The new unit of contribution', title: 'A useful, understood, verified, sustainable change', intro: 'Your contribution is no longer measured in lines of code. It might be a feature, a removed performance limit, a recurring incident that stops recurring — or concluding that a request is best served <em>without</em> new software. The chain below shows every link that has to hold. Select a link, then break it.' },
+    stages: [
+      { title: 'Relevant problem', does: 'Understanding the user and the domain well enough to pick a problem worth solving — including deciding not to build.', failure: 'A technically sophisticated system gets built for a need that doesn’t exist. Everything downstream is wasted, however well executed.' },
+      { title: 'Explicit intent', does: 'Turning the goal into behavior, invariants, constraints and a definition of done that an agent can act on.', failure: 'The agent fills the gaps with plausible guesses. You get something that works — just not the thing you needed.' },
+      { title: 'Delegable execution', does: 'An environment where agents can build, run, test and investigate on their own: context, tools, permissions, state.', failure: 'Execution stalls or needs constant babysitting. The speed of generation is lost to supervision.' },
+      { title: 'Evidence of correctness', does: 'Tests, measurements and checks that would actually catch the relevant errors — with origins independent of the implementation.', failure: 'A convincing implementation reaches production carrying a serious defect.' },
+      { title: 'Observed effect', does: 'Observability and product signals that show whether the change improved anything for real users.', failure: 'You ship, but nobody knows whether it helped — or quietly hurt.' },
+      { title: 'Reusable learning', does: 'Turning what you discovered into a test, a contract, a tool or a document that makes the next task easier.', failure: 'The team pays again and again to solve the same kind of problem.' },
+    ],
+    l3: { label: 'The scarce resource changes', title: 'Production got cheap. Living with bad choices didn’t.', intro: 'If code production is broadly delegable, human investment should concentrate on what keeps that capacity from turning into results: domain understanding, hard decisions, integration, reliable evidence and available attention.' },
+    produce: 'Cost to produce an alternative',
+    live: 'Cost to live with a bad alternative',
+    liveNote: 'maintenance · operations · consequences for users',
+    big: 'The excellent professional learns to increase execution capacity without increasing the need for supervision in the same proportion — by turning quality criteria into contracts, tools, tests, limits and feedback.',
+    l4: { label: 'What “up to date” means', title: 'AI-first becomes the default', intro: 'For delegable tasks, starting with AI execution becomes normal practice. Manual intervention becomes a choice driven by <strong>value, risk or learning</strong> — and you should be able to say which one.' },
+    moves: [
+      ['Use the available capacity', 'Delegate real work. Know tools through hands-on execution, not demos.'],
+      ['Reorganize your own work', 'Create conditions to delegate more, monitor exceptions and improve the flow.'],
+      ['Reinvest the freed capacity', 'Deepen judgment, explore more valuable problems, build shared assets.'],
+    ],
+    lag: 'The relevant professional lag appears when someone keeps organizing their value exclusively around activities they could already delegate. This is a diagnosis of <em>practice</em>, not a verdict on the person or their ability to learn.',
+    takeaways: [
+      'The manifesto changes three things at once: your <strong>individual role</strong>, the <strong>delivery flow</strong> and <strong>collective responsibility</strong>.',
+      'Your unit of contribution is a <strong>useful, understood, verified and sustainable change</strong> in the real system — code is just one of its artifacts.',
+      'When producing alternatives is cheap, the scarce resources are <strong>judgment, integration, evidence and attention</strong>.',
+      'Start with AI by default; intervene manually when <strong>value, risk or learning</strong> justify it — and remove the obstacles that still require repetitive oversight.',
+    ],
+    quiz: [
+      { q: 'A request could be solved by changing a configuration. Generating a new microservice would take an agent ten minutes. What does the new unit of contribution suggest?', options: ['Build the service — generation is cheap now.', 'Change the configuration: the contribution is the useful change, not the amount of code.', 'Build both and let users choose.', 'Wait until the agent can maintain the service autonomously.'], answer: 1, explain: 'Producing an alternative is cheap; living with it is not. Knowing how to cut scope is still engineering.' },
+      { q: 'Which failure makes the same team pay repeatedly for the same kind of problem?', options: ['A failure in the relevant problem.', 'A failure in evidence of correctness.', 'A failure in reusable learning.', 'A failure in delegable execution.'], answer: 2, explain: 'If discoveries never become tests, contracts, tools or docs, every similar task starts from zero.' },
+      { q: 'According to the report, when is manual execution the right call for a delegable task?', options: ['Whenever you are faster than the agent.', 'Never — everything must be delegated.', 'When it is justified by value, risk or learning.', 'Only for senior engineers.'], answer: 2, explain: 'AI-first is the default, and manual intervention is a deliberate choice you should be able to justify.' },
+    ],
+  },
+  pt: {
+    l1: { label: 'A essência do manifesto', title: 'Três mudanças acontecem ao mesmo tempo', intro: 'O manifesto que fundamenta este curso descreve três mudanças complementares. Abra cada carta para ver o que muda — e o que isso exige de você.' },
+    shifts: [
+      { tag: 'Individual', icon: '🧭', title: 'Seu papel muda', summary: 'De escrever código a dirigir modelos e agentes.', detail: 'O engenheiro explicita intenção, fornece condições para execução, reconhece limites e transforma falhas recorrentes em melhorias do sistema de trabalho. A ambição: progresso autônomo e contínuo, com menos intervenção repetitiva.', example: 'Em vez de corrigir a resposta do agente pela quinta vez, você acrescenta o contexto ou a verificação que faltava para que a sexta execução não precise de você.' },
+      { tag: 'Fluxo', icon: '⚙️', title: 'O fluxo de entrega muda', summary: 'Implementar mais rápido desloca o gargalo.', detail: 'Especificações, integração, testes, CI, revisão, aprovação e implantação precisam ser reconsiderados. Às vezes o trabalho é redesenhar uma etapa inteira, porque acelerar uma atividade deixa de produzir ganho relevante.', example: 'O código fica pronto em uma hora, mas espera três dias por revisão e ambiente. A próxima melhoria não é um modelo mais rápido.' },
+      { tag: 'Coletivo', icon: '🤝', title: 'A responsabilidade passa a ser coletiva', summary: 'Contexto, ferramentas e práticas precisam beneficiar a equipe.', detail: 'Contexto, automações e práticas úteis precisam chegar a todos. Parte das melhorias depende de investimento organizacional — e identificar essas dependências também é responsabilidade do engenheiro.', example: 'Seu prompt engenhoso vive nas suas anotações. Uma skill testada e compartilhada vive no repositório e ajuda a equipe toda.' },
+    ],
+    premise: 'O manifesto <strong>preserva</strong> expertise, arquitetura, documentação, testes e responsabilidade humana. Sua proposta é redistribuir o esforço para que essa competência oriente uma capacidade de execução muito maior. [F01]',
+    l2: { label: 'A nova unidade de contribuição', title: 'Uma mudança útil, compreendida, verificada e sustentável', intro: 'Sua contribuição deixa de ser medida em linhas de código. Pode ser uma funcionalidade, uma limitação de desempenho removida, um incidente que para de se repetir — ou concluir que a demanda é melhor atendida <em>sem</em> software novo. A cadeia abaixo mostra cada elo que precisa se sustentar. Selecione um elo e depois quebre-o.' },
+    stages: [
+      { title: 'Problema relevante', does: 'Entender o usuário e o domínio o suficiente para escolher um problema que valha a pena — inclusive decidir não construir.', failure: 'Constrói-se um sistema tecnicamente sofisticado para uma necessidade inexistente. Tudo a jusante é desperdício, por melhor que seja executado.' },
+      { title: 'Intenção explícita', does: 'Transformar o objetivo em comportamento, invariantes, restrições e uma definição de pronto sobre a qual o agente consiga agir.', failure: 'O agente preenche as lacunas com palpites plausíveis. Você recebe algo que funciona — só que não era o que precisava.' },
+      { title: 'Execução delegável', does: 'Um ambiente em que agentes conseguem construir, executar, testar e investigar sozinhos: contexto, ferramentas, permissões, estado.', failure: 'A execução trava ou exige acompanhamento constante. A velocidade da geração se perde em supervisão.' },
+      { title: 'Evidência de correção', does: 'Testes, medições e verificações que realmente detectariam os erros relevantes — com origens independentes da implementação.', failure: 'Uma implementação convincente chega à produção com um defeito grave.' },
+      { title: 'Efeito observado', does: 'Observabilidade e sinais de produto que mostram se a mudança melhorou algo para usuários reais.', failure: 'Você entrega, mas ninguém sabe se ajudou — ou se atrapalhou em silêncio.' },
+      { title: 'Aprendizado reutilizável', does: 'Transformar o que você descobriu em teste, contrato, ferramenta ou documento que facilita a próxima tarefa.', failure: 'A equipe paga repetidamente para resolver o mesmo tipo de problema.' },
+    ],
+    l3: { label: 'O recurso escasso muda', title: 'Produzir ficou barato. Conviver com escolhas ruins, não.', intro: 'Se a produção de código ficou amplamente delegável, o investimento humano deve se concentrar no que impede essa capacidade de virar resultado: entendimento do domínio, decisões difíceis, integração, evidência confiável e atenção disponível.' },
+    produce: 'Custo de produzir uma alternativa',
+    live: 'Custo de conviver com uma alternativa ruim',
+    liveNote: 'manutenção · operação · consequências para usuários',
+    big: 'O profissional excelente aprende a aumentar a capacidade de execução sem aumentar na mesma proporção a necessidade de supervisão — transformando critérios de qualidade em contratos, ferramentas, testes, limites e feedback.',
+    l4: { label: 'O que é “estar atualizado”', title: 'Começar pela IA vira o padrão', intro: 'Em tarefas delegáveis, começar pela execução com IA passa a ser a prática normal. A intervenção manual vira uma escolha dirigida por <strong>valor, risco ou aprendizagem</strong> — e você deveria saber dizer qual.' },
+    moves: [
+      ['Usar a capacidade disponível', 'Delegar trabalho real. Conhecer ferramentas por experiência de execução, não por demonstrações.'],
+      ['Reorganizar o próprio trabalho', 'Criar condições para delegar mais, acompanhar exceções e melhorar o fluxo.'],
+      ['Reinvestir a capacidade liberada', 'Aprofundar julgamento, explorar problemas mais valiosos, construir ativos compartilhados.'],
+    ],
+    lag: 'O atraso profissional relevante aparece quando alguém continua organizando seu valor exclusivamente em torno de atividades que já poderia delegar. É um diagnóstico de <em>prática</em>, não uma sentença sobre a pessoa ou sua capacidade de aprender.',
+    takeaways: [
+      'O manifesto muda três coisas ao mesmo tempo: o <strong>papel individual</strong>, o <strong>fluxo de entrega</strong> e a <strong>responsabilidade coletiva</strong>.',
+      'Sua unidade de contribuição é uma <strong>mudança útil, compreendida, verificada e sustentável</strong> no sistema real — o código é só um dos artefatos.',
+      'Quando produzir alternativas é barato, os recursos escassos são <strong>julgamento, integração, evidência e atenção</strong>.',
+      'Comece pela IA por padrão; intervenha manualmente quando <strong>valor, risco ou aprendizagem</strong> justificarem — e remova os obstáculos que ainda exigem acompanhamento repetitivo.',
+    ],
+    quiz: [
+      { q: 'Uma demanda poderia ser resolvida mudando uma configuração. Gerar um microsserviço novo levaria dez minutos para um agente. O que a nova unidade de contribuição sugere?', options: ['Construir o serviço — gerar ficou barato.', 'Mudar a configuração: a contribuição é a mudança útil, não a quantidade de código.', 'Construir os dois e deixar o usuário escolher.', 'Esperar até que o agente consiga manter o serviço sozinho.'], answer: 1, explain: 'Produzir uma alternativa é barato; conviver com ela, não. Saber eliminar escopo continua sendo engenharia.' },
+      { q: 'Qual falha faz a mesma equipe pagar repetidamente pelo mesmo tipo de problema?', options: ['Falha no problema relevante.', 'Falha na evidência de correção.', 'Falha no aprendizado reutilizável.', 'Falha na execução delegável.'], answer: 2, explain: 'Se as descobertas nunca viram testes, contratos, ferramentas ou documentos, toda tarefa semelhante começa do zero.' },
+      { q: 'Segundo o relatório, quando a execução manual é a escolha certa em uma tarefa delegável?', options: ['Sempre que você for mais rápido que o agente.', 'Nunca — tudo deve ser delegado.', 'Quando for justificada por valor, risco ou aprendizagem.', 'Apenas para engenheiros seniores.'], answer: 2, explain: 'Começar pela IA é o padrão, e a intervenção manual é uma escolha deliberada que você deve saber justificar.' },
+    ],
+  },
+}[lang];
+---
+
+<Lesson n="1.1" label={c.l1.label} title={c.l1.title} wide>
+  <p slot="intro">{c.l1.intro}</p>
+  <CardDeck client:visible lang={lang} cards={c.shifts} cols={3} />
+  <div class="max-w-3xl"><Callout kind="premise" lang={lang}><p set:html={c.premise} /></Callout></div>
+</Lesson>
+
+<Lesson n="1.2" label={c.l2.label} title={c.l2.title} wide>
+  <p slot="intro" set:html={c.l2.intro} />
+  <Pipeline client:visible lang={lang} stages={c.stages} />
+</Lesson>
+
+<Lesson n="1.3" label={c.l3.label} title={c.l3.title}>
+  <p slot="intro">{c.l3.intro}</p>
+  <div class="glass space-y-8 p-6 sm:p-8" data-reveal>
+    <div>
+      <div class="flex justify-between text-sm"><span class="text-zinc-300">{c.produce}</span><span class="font-mono text-emerald-300">↓</span></div>
+      <div class="mt-2 h-4 overflow-hidden rounded-full bg-white/5"><div class="h-full rounded-full bg-gradient-to-r from-emerald-400/40 to-emerald-400" data-bar="12" style="width:12%"></div></div>
+    </div>
+    <div>
+      <div class="flex justify-between text-sm"><span class="text-zinc-300">{c.live}</span><span class="font-mono text-rose-300">=</span></div>
+      <div class="mt-2 h-4 overflow-hidden rounded-full bg-white/5"><div class="h-full rounded-full bg-gradient-to-r from-rose-400/40 to-rose-400" data-bar="88" data-delay="0.3" style="width:88%"></div></div>
+      <p class="mt-2 font-mono text-xs text-zinc-500">{c.liveNote}</p>
+    </div>
+  </div>
+</Lesson>
+
+<BigStatement>{c.big}</BigStatement>
+
+<Lesson n="1.4" label={c.l4.label} title={c.l4.title} wide>
+  <p slot="intro" set:html={c.l4.intro} />
+  <ol class="grid gap-4 md:grid-cols-3">
+    {c.moves.map(([title, body], i) => (
+      <li class="glass spotlight p-6" data-reveal data-delay={String(i * 0.1)}>
+        <span class="font-serif text-6xl text-[var(--accent)] italic">{i + 1}</span>
+        <h3 class="mt-3 text-xl font-semibold">{title}</h3>
+        <p class="mt-2 text-zinc-400">{body}</p>
+      </li>
+    ))}
+  </ol>
+  <div class="max-w-3xl"><Callout kind="synthesis" lang={lang}><p set:html={c.lag} /></Callout></div>
+</Lesson>
+
+<Takeaways lang={lang} items={c.takeaways} />
+
+<section class="pb-10"><div class="container-x"><div data-reveal><Quiz client:visible lang={lang} questions={c.quiz} /></div></div></section>

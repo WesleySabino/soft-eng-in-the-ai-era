@@ -1,0 +1,136 @@
+---
+import Lesson from '../components/ui/Lesson.astro';
+import Callout from '../components/ui/Callout.astro';
+import Takeaways from '../components/ui/Takeaways.astro';
+import Quiz from '../components/islands/Quiz.tsx';
+import FlowCalculator from '../components/islands/FlowCalculator.tsx';
+import CostCalculator from '../components/islands/CostCalculator.tsx';
+import CardDeck from '../components/islands/CardDeck.tsx';
+import Cycle from '../components/islands/Cycle.tsx';
+import type { Lang } from '../data/chapters';
+
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+
+const c = {
+  en: {
+    l1: { label: 'Local acceleration must cross the system', title: '10× faster code, 1.56× faster delivery', intro: 'A delivery takes 100 hours: 40 implementing, 60 on decisions, waiting, integration and validation. Make implementation ten times faster and delivery takes 64 hours. Play with the numbers — then try speeding up the rest of the flow instead.' },
+    dora: 'DORA’s AI Capabilities Model identifies seven capabilities associated with better outcomes with AI — the collective environment shapes the results. [F04]',
+    caps: ['Clear organizational stance', 'Healthy data ecosystem', 'AI access to internal data', 'Version control practices', 'Small batches', 'User focus', 'Quality internal platforms'],
+    l2: { label: 'A small dashboard', title: 'Measure the questions, not the activity', intro: 'There’s no need to instrument everything before starting: pick what answers the current bottleneck. SPACE reminds us to measure across dimensions so tokens, commits or code volume never become the goal. [F11]' },
+    qs: [
+      { icon: '👤', title: 'Can the user do their task better?', summary: 'Journey success, time to complete, errors, feedback.', detail: 'Use it to prioritize work that produces value.', example: 'Checkout completion rate before and after the change.' },
+      { icon: '⏳', title: 'Where does delivery wait?', summary: 'Queue time and execution time per stage.', detail: 'Use it to find the flow bottleneck.', example: 'Changes wait 2.5 days for review vs 40 minutes being written.' },
+      { icon: '🧱', title: 'Is the change sustainable?', summary: 'Escaped failures, rework, regressions, incidents.', detail: 'Use it to adjust controls and architecture.', example: 'Rework within 30 days of merge, by class of change.' },
+      { icon: '🤖', title: 'Is autonomy increasing?', summary: 'Human intervention time per class of task.', detail: 'Use it to identify repetitive supervision you can eliminate.', example: 'Minutes of human help per dependency upgrade, month over month.' },
+      { icon: '💰', title: 'Is total cost appropriate?', summary: 'Cost per accepted change, review and infra included.', detail: 'Use it to compare models and processes by outcome.', example: 'See the calculator below.' },
+      { icon: '🤝', title: 'Has the gain become collective?', summary: 'Reuse of procedures, fewer recurring failures.', detail: 'Use it to prioritize shared improvements.', example: 'How many teams use the migration skill; recurrence of its failure class.' },
+    ],
+    doraTitle: 'DORA’s five delivery metrics',
+    doraM: [['Change lead time', 'Commit to production'], ['Deployment frequency', 'How often you deploy'], ['Failed deployment recovery time', 'Time to recover'], ['Change fail rate', 'Deployments needing immediate intervention'], ['Deployment rework rate', 'Unplanned deployments caused by incidents']],
+    doraNote: 'Contextualize them by application or service — avoid artificial comparisons between different kinds of work. [F38]',
+    l3: { label: 'Measuring cost honestly', title: 'Cost per accepted change', intro: 'A configuration that is cheap per token may require more rework; a more expensive one may free enough human time to make up for it. Record calendar time, agent time and human effort separately — concurrency changes the relationship between them.' },
+    l4: { label: 'Turning recurring failure into improvement', title: 'A five-step loop for the team', intro: 'This extends an SRE tradition: reduce repetitive operational work by eliminating its cause. AI makes automation more accessible; you still choose where it pays off. [F34]' },
+    loop: [
+      { title: 'Record', body: 'The failure, with task, configuration and evidence.' },
+      { title: 'Classify', body: 'Ambiguous requirement, inadequate context, environment, tool, verification or model limitation?' },
+      { title: 'Intervene minimally', body: 'Choose the simplest intervention that addresses the cause: a test, an API constraint, an example, a doc update, a clearer tool.' },
+      { title: 'Re-run', body: 'Replay a case that reproduced the failure.' },
+      { title: 'Share & watch', body: 'Share the improvement and watch for recurrence. Remove obsolete guidance as well.' },
+    ],
+    center: 'Failure → capability',
+    org: 'Some conditions need institutional support: environments, authorized access, budget, CI capacity, integration with internal data and evaluation criteria. Leadership should recognize work that increases collective capacity — even when it <em>reduces</em> the visible intervention of whoever did it. An adoption initiative needs an owner for the flow, prioritized problems and tracked outcomes. [F13]',
+    takeaways: [
+      'A local speedup only shrinks its own share of elapsed time: <strong>find where the time actually goes</strong>.',
+      'Use a small dashboard of <strong>questions</strong> — user outcome, waiting, sustainability, autonomy, cost, collective gain.',
+      'Compare configurations by <strong>cost per accepted change</strong>, human time included.',
+      'Turn each recurring failure into a <strong>shared, verified improvement</strong>.',
+    ],
+    quiz: [
+      { q: 'Implementation is 40% of elapsed time. What is the maximum overall speedup from making implementation infinitely fast?', options: ['10×', 'About 1.67×', 'Infinite', '2.5×'], answer: 1, explain: '100 / 60 ≈ 1.67×. The remaining 60 hours are the ceiling.' },
+      { q: 'Model A is 6× cheaper per token but needs three times more human fixing. How should you compare?', options: ['Pick A — it’s cheaper.', 'By cost per accepted change including human time, on comparable tasks.', 'By lines of code per dollar.', 'By benchmark score.'], answer: 1, explain: 'The cheapest per call can be the most expensive per accepted result.' },
+      { q: 'An agent ran 3 hours while you worked on something else for 2 hours. How should you record effort?', options: ['5 hours.', 'Separately: calendar time, agent time and human effort.', '3 hours.', '0 hours.'], answer: 1, explain: 'Summing concurrent times as if sequential produces a misleading measure.' },
+    ],
+  },
+  pt: {
+    l1: { label: 'A aceleração local precisa atravessar o sistema', title: 'Código 10× mais rápido, entrega 1,56× mais rápida', intro: 'Uma entrega leva 100 horas: 40 implementando, 60 em decisões, esperas, integração e validação. Torne a implementação dez vezes mais rápida e a entrega leva 64 horas. Brinque com os números — e depois tente acelerar o resto do fluxo.' },
+    dora: 'O AI Capabilities Model da DORA identifica sete capacidades associadas a melhores resultados com IA — o ambiente coletivo participa dos resultados. [F04]',
+    caps: ['Posição organizacional clara', 'Ecossistema saudável de dados', 'Acesso da IA a dados internos', 'Práticas de versionamento', 'Lotes pequenos', 'Foco no usuário', 'Plataformas internas de qualidade'],
+    l2: { label: 'Um painel pequeno', title: 'Meça as perguntas, não a atividade', intro: 'Não é preciso instrumentar tudo antes de começar: escolha o que responde ao gargalo atual. O SPACE lembra de medir em várias dimensões para que tokens, commits ou volume de código nunca virem a finalidade. [F11]' },
+    qs: [
+      { icon: '👤', title: 'O usuário realiza melhor sua tarefa?', summary: 'Sucesso da jornada, tempo para concluir, erros, feedback.', detail: 'Use para priorizar trabalho que produz valor.', example: 'Taxa de conclusão do checkout antes e depois da mudança.' },
+      { icon: '⏳', title: 'Onde a entrega espera?', summary: 'Tempo em fila e em execução por etapa.', detail: 'Use para encontrar o gargalo de fluxo.', example: 'Mudanças esperam 2,5 dias por revisão contra 40 minutos sendo escritas.' },
+      { icon: '🧱', title: 'A mudança é sustentável?', summary: 'Falhas escapadas, retrabalho, regressões, incidentes.', detail: 'Use para ajustar controles e arquitetura.', example: 'Retrabalho em até 30 dias após o merge, por classe de mudança.' },
+      { icon: '🤖', title: 'A autonomia está aumentando?', summary: 'Tempo humano de intervenção por classe de tarefa.', detail: 'Use para identificar supervisão repetitiva que pode ser eliminada.', example: 'Minutos de ajuda humana por atualização de dependência, mês a mês.' },
+      { icon: '💰', title: 'O custo total está adequado?', summary: 'Custo por mudança aceita, com revisão e infraestrutura.', detail: 'Use para comparar modelos e processos pelo resultado.', example: 'Veja a calculadora abaixo.' },
+      { icon: '🤝', title: 'O ganho se tornou coletivo?', summary: 'Reutilização de procedimentos, menos falhas recorrentes.', detail: 'Use para priorizar melhorias compartilhadas.', example: 'Quantas equipes usam a skill de migração; recorrência da sua classe de falha.' },
+    ],
+    doraTitle: 'As cinco métricas de entrega da DORA',
+    doraM: [['Change lead time', 'Do commit à produção'], ['Frequência de implantação', 'Com que frequência você implanta'], ['Tempo de recuperação', 'De uma implantação malsucedida'], ['Change fail rate', 'Implantações que exigem intervenção imediata'], ['Deployment rework rate', 'Implantações não planejadas decorrentes de incidentes']],
+    doraNote: 'Contextualize por aplicação ou serviço — evite comparações artificiais entre trabalhos diferentes. [F38]',
+    l3: { label: 'Medir custo com honestidade', title: 'Custo por mudança aceita', intro: 'Uma configuração barata por token pode exigir mais retrabalho; uma mais cara pode liberar tempo humano suficiente para compensar. Registre separadamente tempo de calendário, tempo de agente e esforço humano — a simultaneidade muda a relação entre eles.' },
+    l4: { label: 'Transformar falha recorrente em melhoria', title: 'Um ciclo de cinco passos para a equipe', intro: 'Isso amplia uma tradição do SRE: reduzir trabalho operacional repetitivo eliminando sua causa. A IA torna a automação mais acessível; você ainda escolhe onde ela compensa. [F34]' },
+    loop: [
+      { title: 'Registrar', body: 'A falha, com tarefa, configuração e evidência.' },
+      { title: 'Classificar', body: 'Requisito ambíguo, contexto inadequado, ambiente, ferramenta, verificação ou limitação do modelo?' },
+      { title: 'Intervir minimamente', body: 'Escolha a intervenção mais simples que trate a causa: um teste, uma restrição de API, um exemplo, uma atualização de documentação, uma ferramenta mais clara.' },
+      { title: 'Reexecutar', body: 'Repita um caso que reproduzia a falha.' },
+      { title: 'Compartilhar e observar', body: 'Compartilhe a melhoria e observe a recorrência. Remova também orientações obsoletas.' },
+    ],
+    center: 'Falha → capacidade',
+    org: 'Algumas condições exigem apoio institucional: ambientes, acesso autorizado, orçamento, capacidade de CI, integração com dados internos e critérios de avaliação. A liderança deve reconhecer trabalho que aumenta a capacidade coletiva — mesmo quando ele <em>reduz</em> a intervenção visível de quem o fez. Uma iniciativa de adoção precisa de um responsável pelo fluxo, problemas priorizados e resultados acompanhados. [F13]',
+    takeaways: [
+      'Uma aceleração local só reduz sua própria parcela do tempo: <strong>descubra onde o tempo realmente vai</strong>.',
+      'Use um painel pequeno de <strong>perguntas</strong> — resultado para o usuário, espera, sustentabilidade, autonomia, custo, ganho coletivo.',
+      'Compare configurações por <strong>custo por mudança aceita</strong>, incluindo tempo humano.',
+      'Transforme cada falha recorrente em uma <strong>melhoria compartilhada e verificada</strong>.',
+    ],
+    quiz: [
+      { q: 'A implementação é 40% do tempo decorrido. Qual a aceleração total máxima ao torná-la infinitamente rápida?', options: ['10×', 'Cerca de 1,67×', 'Infinita', '2,5×'], answer: 1, explain: '100 / 60 ≈ 1,67×. As 60 horas restantes são o teto.' },
+      { q: 'O modelo A é 6× mais barato por token, mas exige três vezes mais correção humana. Como comparar?', options: ['Escolher A — é mais barato.', 'Por custo por mudança aceita, incluindo tempo humano, em tarefas comparáveis.', 'Por linhas de código por real.', 'Por nota em benchmark.'], answer: 1, explain: 'O mais barato por chamada pode ser o mais caro por resultado aceito.' },
+      { q: 'Um agente trabalhou 3 horas enquanto você trabalhava 2 horas em outra coisa. Como registrar o esforço?', options: ['5 horas.', 'Separadamente: tempo de calendário, tempo de agente e esforço humano.', '3 horas.', '0 hora.'], answer: 1, explain: 'Somar tempos simultâneos como se fossem sequenciais produz uma medida enganosa.' },
+    ],
+  },
+}[lang];
+---
+
+<Lesson n="12.1" label={c.l1.label} title={c.l1.title} wide>
+  <p slot="intro">{c.l1.intro}</p>
+  <FlowCalculator client:visible lang={lang} />
+  <div class="mt-10">
+    <p class="text-sm text-zinc-400" data-reveal>{c.dora}</p>
+    <ul class="mt-4 flex flex-wrap gap-3">
+      {c.caps.map((x, i) => <li class="chip !px-4 !py-2 !text-sm" data-reveal="scale" data-delay={String(i * 0.05)}><span class="font-mono text-[var(--accent)]">{i + 1}</span>{x}</li>)}
+    </ul>
+  </div>
+</Lesson>
+
+<Lesson n="12.2" label={c.l2.label} title={c.l2.title} wide>
+  <p slot="intro">{c.l2.intro}</p>
+  <CardDeck client:visible lang={lang} cards={c.qs} cols={3} />
+  <h3 class="mt-14 font-serif text-3xl" data-reveal>{c.doraTitle}</h3>
+  <ol class="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+    {c.doraM.map(([t, b], i) => (
+      <li class="glass spotlight p-5" data-reveal data-delay={String(i * 0.06)}>
+        <span class="font-mono text-xs text-[var(--accent)]">0{i + 1}</span>
+        <p class="mt-2 font-semibold text-white">{t}</p>
+        <p class="mt-1 text-xs text-zinc-400">{b}</p>
+      </li>
+    ))}
+  </ol>
+  <p class="mt-4 text-sm text-zinc-500">{c.doraNote}</p>
+</Lesson>
+
+<Lesson n="12.3" label={c.l3.label} title={c.l3.title} wide>
+  <p slot="intro">{c.l3.intro}</p>
+  <CostCalculator client:visible lang={lang} />
+</Lesson>
+
+<Lesson n="12.4" label={c.l4.label} title={c.l4.title} wide>
+  <p slot="intro">{c.l4.intro}</p>
+  <Cycle client:visible lang={lang} steps={c.loop} center={c.center} />
+  <div class="max-w-3xl"><Callout kind="evidence" lang={lang} source="SPACE of AI"><p set:html={c.org} /></Callout></div>
+</Lesson>
+
+<Takeaways lang={lang} items={c.takeaways} />
+<section class="pb-10"><div class="container-x"><div data-reveal><Quiz client:visible lang={lang} questions={c.quiz} /></div></div></section>

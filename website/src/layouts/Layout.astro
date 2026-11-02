@@ -1,0 +1,215 @@
+---
+import '../styles/global.css';
+import SEO from '../components/SEO.astro';
+import { CHAPTERS, PARTS, chaptersOfPart, type Lang } from '../data/chapters';
+import { UI, htmlLang } from '../i18n/ui';
+import { asset, chapterUrl, homeUrl } from '../lib/paths';
+
+interface Props {
+  lang: Lang;
+  title: string;
+  description: string;
+  path: string;
+  altPath?: string;
+  type?: 'website' | 'article';
+  jsonLd?: Record<string, unknown>[];
+  accent?: string;
+  chapterId?: number;
+  noindex?: boolean;
+}
+
+const { lang, accent = '#a78bfa', chapterId, altPath, ...seo } = Astro.props;
+const t = UI[lang];
+const otherLang: Lang = lang === 'en' ? 'pt' : 'en';
+const switchHref = altPath ?? homeUrl(otherLang);
+---
+
+<!doctype html>
+<html lang={htmlLang(lang)} style={`--accent:${accent}`}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#05050a" />
+    <meta name="generator" content={Astro.generator} />
+    <link rel="icon" type="image/svg+xml" href={asset('favicon.svg')} />
+    <link rel="manifest" href={asset('site.webmanifest')} />
+    <link rel="sitemap" href={asset('sitemap-index.xml')} />
+    <script is:inline>
+      document.documentElement.classList.add('js');
+      if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) document.documentElement.classList.add('motion-ok');
+      // safety net: never keep content hidden if scripts fail to load
+      setTimeout(function () {
+        if (!window.__motionReady) document.documentElement.classList.remove('motion-ok');
+      }, 4000);
+    </script>
+    <SEO {...seo} lang={lang} altPath={altPath} />
+  </head>
+  <body data-chapter={chapterId ?? ''} data-total={CHAPTERS.length}>
+    <a href="#main" class="sr-only z-[100] rounded-full bg-white px-4 py-2 text-ink-950 focus:not-sr-only focus:fixed focus:top-4 focus:left-4">{t.skip}</a>
+    <div class="grain" aria-hidden="true"></div>
+    <div id="read-progress" class="fixed inset-x-0 top-0 z-[70] h-[2px] origin-left scale-x-0" style="background:linear-gradient(90deg,var(--accent),#22d3ee)" aria-hidden="true"></div>
+
+    <header
+      id="site-header"
+      data-scrolled="false"
+      data-hidden="false"
+      class="fixed inset-x-0 top-0 z-50 transition-all duration-500 data-[hidden=true]:-translate-y-full data-[scrolled=true]:border-b data-[scrolled=true]:border-white/10 data-[scrolled=true]:bg-ink-950/70 data-[scrolled=true]:backdrop-blur-xl"
+    >
+      <div class="container-x flex h-16 items-center justify-between gap-4">
+        <a href={homeUrl(lang)} class="group flex items-center gap-3" aria-label={t.home}>
+          <img src={asset('favicon.svg')} alt="" width="28" height="28" class="transition duration-500 group-hover:rotate-12" />
+          <span class="hidden font-mono text-xs tracking-[0.2em] text-zinc-300 uppercase sm:inline">{t.siteShort}</span>
+        </a>
+        <nav class="flex items-center gap-2" aria-label="Site">
+          <div class="hidden items-center gap-2 pr-2 md:flex" title={t.progress}>
+            <svg width="22" height="22" viewBox="0 0 22 22" class="-rotate-90" aria-hidden="true">
+              <circle cx="11" cy="11" r="9" fill="none" stroke="rgb(255 255 255 / .12)" stroke-width="2.5"></circle>
+              <circle data-progress-ring cx="11" cy="11" r="9" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" style="transition:stroke-dashoffset 1s cubic-bezier(.16,1,.3,1)"></circle>
+            </svg>
+            <span data-progress-count class="font-mono text-xs text-zinc-400">0 / {CHAPTERS.length}</span>
+          </div>
+          <a
+            href={switchHref}
+            hreflang={otherLang === 'pt' ? 'pt-BR' : 'en'}
+            lang={otherLang === 'pt' ? 'pt-BR' : 'en'}
+            data-lang-switch={otherLang}
+            class="btn-ghost !px-3 !py-1.5 font-mono text-xs"
+            aria-label={t.switchLang}
+            title={t.switchLang}
+          >
+            <span class="text-zinc-500">{lang.toUpperCase()}</span>
+            <span aria-hidden="true">→</span>
+            <span>{otherLang.toUpperCase()}</span>
+          </a>
+          <button id="menu-open" class="btn-ghost !px-4 !py-1.5 text-xs" aria-controls="menu" aria-expanded="false">
+            <span class="flex flex-col gap-[3px]" aria-hidden="true"><span class="h-px w-4 bg-white"></span><span class="h-px w-3 bg-white"></span></span>
+            {t.chapters}
+          </button>
+        </nav>
+      </div>
+    </header>
+
+    <!-- Full-screen chapter menu -->
+    <div
+      id="menu"
+      role="dialog"
+      aria-modal="true"
+      aria-label={t.chapters}
+      data-open="false"
+      class="invisible fixed inset-0 z-[80] overflow-y-auto bg-ink-950/95 opacity-0 backdrop-blur-2xl transition-all duration-500 data-[open=true]:visible data-[open=true]:opacity-100"
+      data-lenis-prevent
+    >
+      <div class="container-x py-6">
+        <div class="flex items-center justify-between">
+          <span class="eyebrow">{t.chapters}</span>
+          <button id="menu-close" class="btn-ghost !px-4 !py-1.5 text-xs">{t.close} ✕</button>
+        </div>
+        <div class="mt-10 grid gap-10 md:grid-cols-2">
+          {
+            PARTS.map((p, pi) => (
+              <section style={`--accent:${p.accent}`} class="menu-item" data-i={pi}>
+                <p class="eyebrow">
+                  {t.part} {p.id} · {p.title[lang]}
+                </p>
+                <ol class="mt-4 space-y-1">
+                  {chaptersOfPart(p.id).map((c) => (
+                    <li>
+                      <a
+                        href={chapterUrl(lang, c)}
+                        data-progress-for={c.id}
+                        aria-current={c.id === chapterId ? 'page' : undefined}
+                        class="group flex items-baseline gap-4 rounded-xl px-3 py-2 transition hover:bg-white/5 aria-[current=page]:bg-white/5"
+                      >
+                        <span class="w-7 font-mono text-xs text-zinc-500 group-hover:text-[var(--accent)]">{String(c.id).padStart(2, '0')}</span>
+                        <span class="flex-1 font-serif text-2xl text-white sm:text-[1.7rem]">{c.short[lang]}</span>
+                        <span class="done-mark font-mono text-xs text-[var(--accent)] opacity-0 transition">✓</span>
+                      </a>
+                    </li>
+                  ))}
+                </ol>
+              </section>
+            ))
+          }
+        </div>
+        <div class="mt-12 flex flex-wrap items-center gap-4 border-t border-white/10 pt-6 text-sm text-zinc-400">
+          <span>{t.progress}: <span data-progress-count class="font-mono text-white">0 / {CHAPTERS.length}</span></span>
+          <button data-reset-progress class="underline decoration-white/20 underline-offset-4 hover:text-white">{t.resetProgress}</button>
+        </div>
+      </div>
+    </div>
+
+    <main id="main" class="relative">
+      <slot />
+    </main>
+
+    <footer class="relative border-t border-white/10 py-14">
+      <div class="container-x grid gap-8 md:grid-cols-[1.4fr_1fr]">
+        <div>
+          <a href={homeUrl(lang)} class="font-serif text-3xl text-white">{t.siteName}</a>
+          <p class="mt-4 max-w-xl text-sm leading-relaxed text-zinc-400">{t.footerNote}</p>
+        </div>
+        <div class="flex flex-col items-start gap-3 text-sm md:items-end">
+          <a href={switchHref} hreflang={otherLang === 'pt' ? 'pt-BR' : 'en'} data-lang-switch={otherLang} class="text-zinc-300 hover:text-white">{t.switchLang} →</a>
+          <a href={chapterUrl(lang, CHAPTERS[16])} class="text-zinc-400 hover:text-white">{CHAPTERS[16].short[lang]}</a>
+          <a href={chapterUrl(lang, CHAPTERS[17])} class="text-zinc-400 hover:text-white">{CHAPTERS[17].short[lang]}</a>
+        </div>
+      </div>
+    </footer>
+
+    <style>
+      [data-done='true'] .done-mark {
+        opacity: 1;
+      }
+      #menu .menu-item {
+        transform: translateY(24px);
+        opacity: 0;
+        transition:
+          transform 0.8s var(--ease-out-expo),
+          opacity 0.8s var(--ease-out-expo);
+      }
+      #menu[data-open='true'] .menu-item {
+        transform: none;
+        opacity: 1;
+      }
+      #menu[data-open='true'] .menu-item[data-i='1'] { transition-delay: 0.06s; }
+      #menu[data-open='true'] .menu-item[data-i='2'] { transition-delay: 0.12s; }
+      #menu[data-open='true'] .menu-item[data-i='3'] { transition-delay: 0.18s; }
+    </style>
+
+    <script>
+      import '../scripts/motion';
+      import '../scripts/progress';
+      (window as any).__motionReady = true;
+
+      const menu = document.getElementById('menu')!;
+      const openBtn = document.getElementById('menu-open')!;
+      const closeBtn = document.getElementById('menu-close')!;
+      const setOpen = (open: boolean) => {
+        menu.dataset.open = String(open);
+        openBtn.setAttribute('aria-expanded', String(open));
+        const lenis = (window as any).__lenis;
+        if (open) {
+          lenis?.stop();
+          document.body.style.overflow = 'hidden';
+          closeBtn.focus();
+        } else {
+          lenis?.start();
+          document.body.style.overflow = '';
+          openBtn.focus();
+        }
+      };
+      openBtn.addEventListener('click', () => setOpen(true));
+      closeBtn.addEventListener('click', () => setOpen(false));
+      document.addEventListener('keydown', (e) => e.key === 'Escape' && menu.dataset.open === 'true' && setOpen(false));
+
+      // remember an explicit language choice for the root redirect
+      document.querySelectorAll<HTMLElement>('[data-lang-switch]').forEach((a) =>
+        a.addEventListener('click', () => {
+          try {
+            localStorage.setItem('seai:lang', a.dataset.langSwitch!);
+          } catch {}
+        }),
+      );
+    </script>
+  </body>
+</html>

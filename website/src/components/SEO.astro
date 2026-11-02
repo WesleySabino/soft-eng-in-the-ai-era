@@ -1,0 +1,55 @@
+---
+import type { Lang } from '../data/chapters';
+import { UI, htmlLang, ogLocale } from '../i18n/ui';
+import { asset } from '../lib/paths';
+
+interface Props {
+  lang: Lang;
+  title: string;
+  description: string;
+  /** site-relative path of this page, e.g. "/en/the-central-shift/" (already including base) */
+  path: string;
+  /** site-relative path of the equivalent page in the other language */
+  altPath?: string;
+  type?: 'website' | 'article';
+  jsonLd?: Record<string, unknown>[];
+  noindex?: boolean;
+}
+
+const { lang, title, description, path, altPath, type = 'website', jsonLd = [], noindex = false } = Astro.props;
+const site = Astro.site ?? new URL('https://example.github.io');
+const abs = (p: string) => new URL(p, site).href;
+const canonical = abs(path);
+const other: Lang = lang === 'en' ? 'pt' : 'en';
+const enPath = lang === 'en' ? path : altPath;
+const ptPath = lang === 'pt' ? path : altPath;
+const ogImage = abs(asset(`og-${lang}.png`));
+const fullTitle = title.includes(UI[lang].siteName) ? title : `${title} · ${UI[lang].siteName}`;
+---
+
+<title>{fullTitle}</title>
+<meta name="description" content={description} />
+<link rel="canonical" href={canonical} />
+{noindex && <meta name="robots" content="noindex, follow" />}
+{enPath && <link rel="alternate" hreflang="en" href={abs(enPath)} />}
+{ptPath && <link rel="alternate" hreflang="pt-BR" href={abs(ptPath)} />}
+{enPath && <link rel="alternate" hreflang="x-default" href={abs(enPath)} />}
+
+<meta property="og:type" content={type} />
+<meta property="og:site_name" content={UI[lang].siteName} />
+<meta property="og:title" content={fullTitle} />
+<meta property="og:description" content={description} />
+<meta property="og:url" content={canonical} />
+<meta property="og:locale" content={ogLocale(lang)} />
+{altPath && <meta property="og:locale:alternate" content={ogLocale(other)} />}
+<meta property="og:image" content={ogImage} />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content={UI[lang].siteName} />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content={fullTitle} />
+<meta name="twitter:description" content={description} />
+<meta name="twitter:image" content={ogImage} />
+<meta name="content-language" content={htmlLang(lang)} />
+
+{jsonLd.map((data) => <script is:inline type="application/ld+json" set:html={JSON.stringify(data)} />)}

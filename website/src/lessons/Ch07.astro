@@ -1,0 +1,184 @@
+---
+import Lesson from '../components/ui/Lesson.astro';
+import Callout from '../components/ui/Callout.astro';
+import Takeaways from '../components/ui/Takeaways.astro';
+import BigStatement from '../components/ui/BigStatement.astro';
+import Quiz from '../components/islands/Quiz.tsx';
+import Scenario from '../components/islands/Scenario.tsx';
+import EvidenceExplorer from '../components/islands/EvidenceExplorer.tsx';
+import Sorter from '../components/islands/Sorter.tsx';
+import Cycle from '../components/islands/Cycle.tsx';
+import type { Lang } from '../data/chapters';
+
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+
+const c = {
+  en: {
+    l1: { label: 'Two things to evaluate', title: 'The software — and the process that made it', intro: 'One run can produce a correct change after many attempts and hours of supervision: the result is valid, the process has a problem. Another can be fast, elegant and wrong. Software tests and evaluations of the agent system complement each other. [F20]' },
+    two: [
+      ['The software produced', 'Meets the requirements and preserves important properties.', 'Tests, contracts, measurements, observation in production.'],
+      ['The agent-based process', 'Solves tasks consistently, with acceptable cost and intervention.', 'Evals: tasks, trials, trajectories and final states — over multiple runs.'],
+    ],
+    how: 'Evaluated with',
+    l2: { label: 'The correctness oracle', title: 'Where does your criterion of “correct” come from?', intro: 'An <strong>oracle</strong> decides whether a result is correct: a rule, a contract, a data constraint, a reference behavior or structured human evaluation. If implementation and tests come from the same incomplete interpretation, both agree — and both fail the real requirement.' },
+    oracle: {
+      situation: 'An export endpoint must only include data from the authenticated customer. The agent wrote the endpoint and asks which test to add.',
+      question: 'Which test gives the strongest evidence?',
+      options: [
+        { label: 'Assert the response is 200 and has a CSV content type.', result: '“Returned a CSV” covers a tiny property. A cross-customer leak passes this test.', verdict: 'bad' },
+        { label: 'Snapshot the CSV produced for customer A.', result: 'Detects changes, not correctness — the snapshot may already contain another customer’s rows.', verdict: 'ok' },
+        { label: 'Ask a second agent to review the endpoint.', result: 'Helps exploration, but it shares the same interpretation and blind spots. Independence comes from evidence with different origins.', verdict: 'ok' },
+        { label: 'Two customers with similar data; A tries to export using B’s identifiers; assert none of B’s rows ever appear.', result: 'This tests the authorization boundary that actually matters.', verdict: 'best' },
+      ],
+    },
+    opq: 'What relevant error would go unnoticed if this test were the only quality signal?',
+    l3: { label: 'Choosing the form of evidence', title: 'Match the evidence to the risk', intro: 'Each kind of evidence catches some errors and is blind to others. The strengths below are this course’s applied synthesis of the report’s decision table — adapt them to your domain.' },
+    meta: '<strong>Metamorphic relations</strong> are powerful oracles: a lossless transform followed by its inverse preserves the data; adding a conjunctive filter to the same set, before pagination, never enlarges the result. The value comes from the relation tested and its conditions of validity.',
+    l4: { label: 'The economics of tests', title: 'Writing tests got cheap. Running and trusting them didn’t.', intro: 'You still pay for execution, flaky failures and environments. Expand evidence where it reduces risk or human work — more contract tests, adversarial cases and critical journeys — while keeping feedback fast and interpretable.' },
+    carlini: 'In the parallel-agents C compiler experiment, the author’s work concentrated on the environment, the verifiers and the feedback; external references helped isolate problems for independent execution. A capability experiment, with acknowledged limitations. [F22]',
+    l5: { label: 'Human review changes its distribution', title: 'Automate — or keep human judgment?', intro: 'To reduce manual review sustainably, know which defects your mechanisms catch, track what slips through and keep recovery capability. Sort these review activities.' },
+    rbuckets: [
+      { id: 'auto', label: 'Automate', color: '#22d3ee', hint: 'Mechanical, well-controlled classes' },
+      { id: 'human', label: 'Human judgment', color: '#fbbf24', hint: 'Requirements, trust boundaries, consequences' },
+    ],
+    ritems: [
+      { text: 'Code style and formatting conventions.', bucket: 'auto', why: 'Mechanical rules belong in linters and formatters.' },
+      { text: 'Does this change actually match the agreed requirement?', bucket: 'human', why: 'Requirements need an oracle independent of the implementation.' },
+      { text: 'Repetitive policy checks (license headers, forbidden APIs).', bucket: 'auto', why: 'Deterministic policies are perfect for automation.' },
+      { text: 'A change to who can access billing data.', bucket: 'human', why: 'Trust boundaries and high-consequence decisions deserve human attention.' },
+      { text: 'A mechanically verifiable rename refactor.', bucket: 'auto', why: 'Compiler and tests verify it; a different, lighter flow fits.' },
+      { text: 'A data deletion with weak test evidence.', bucket: 'human', why: 'Changes without good evidence and hard to reverse need a decision.' },
+    ],
+    l6: { label: 'Evaluating your AI workflow', title: 'A small eval suite beats a big benchmark', intro: 'Start with representative real tasks: a localized fix, a cross-module change, an investigation, an interface change, a migration and an ambiguous requirement.' },
+    cycle: [
+      { title: 'Select real tasks', body: 'Pick representative tasks, including ones that failed before. Hold some out so you don’t tune the process to them.' },
+      { title: 'Record the setup', body: 'Initial state, expected result, criteria, code version, agent configuration.' },
+      { title: 'Restore a known state', body: 'Every attempt starts clean — no data, caches or effects from a previous run.' },
+      { title: 'Run and repeat', body: 'Compare configurations under similar conditions; repeat when variability could change the decision.' },
+      { title: 'Measure what matters', body: 'Correct result, cost, human time, regressions and out-of-scope actions.' },
+      { title: 'Confirm in the artifact', body: 'Check the file, tests, database or deployment — not the agent’s narration. Separate verified, impossible and open checks.' },
+    ],
+    center: 'Eval loop',
+    big: 'A single favorable demonstration is a starting point for investigation — not a conclusion.',
+    takeaways: [
+      'Evaluate both the <strong>software</strong> and the <strong>agent process</strong> that produced it.',
+      'Know where your <strong>oracle</strong> comes from; the strongest independence is evidence with different origins.',
+      'Choose evidence by <strong>risk</strong>: integration with real databases for races, two-customer scenarios for authorization, load for latency.',
+      'Move human review to <strong>requirements, trust boundaries and weak-evidence changes</strong>; automate the mechanical.',
+    ],
+    quiz: [
+      { q: 'Implementation and tests were both generated from the same ambiguous ticket. What is the risk?', options: ['Tests will be flaky.', 'Both can agree with each other and still fail the real requirement.', 'Coverage will be too high.', 'None, if tests pass.'], answer: 1, explain: 'An oracle derived from the same incomplete interpretation can’t detect that interpretation being wrong.' },
+      { q: 'Which evidence best detects a race for the last unit of stock?', options: ['Unit tests with mocks.', 'Static types.', 'Integration tests against a real database with synchronization barriers.', 'A code review by another agent.'], answer: 2, explain: 'Mocks don’t show locking and isolation; coordinated integration tests do.' },
+      { q: 'An agent says “all tests passed.” What should the final record contain?', options: ['That sentence is enough.', 'Which checks ran on which version, which were impossible and which hypotheses remain open.', 'The agent’s confidence score.', 'Only failures.'], answer: 1, explain: 'Narrated success must be confirmed in the relevant artifact and recorded precisely.' },
+    ],
+  },
+  pt: {
+    l1: { label: 'Duas coisas a avaliar', title: 'O software — e o processo que o produziu', intro: 'Uma execução pode gerar uma mudança correta depois de muitas tentativas e horas de supervisão: o resultado vale, o processo tem um problema. Outra pode ser rápida, elegante e errada. Testes do software e avaliações do sistema de agentes se complementam. [F20]' },
+    two: [
+      ['O software produzido', 'Atende aos requisitos e preserva propriedades importantes.', 'Testes, contratos, medições, observação em produção.'],
+      ['O processo com agentes', 'Resolve tarefas de forma consistente, com custo e intervenção aceitáveis.', 'Evals: tarefas, tentativas, trajetórias e estados finais — em múltiplas execuções.'],
+    ],
+    how: 'Avaliado com',
+    l2: { label: 'O oráculo de correção', title: 'De onde vem seu critério de “correto”?', intro: 'Um <strong>oráculo</strong> decide se um resultado está correto: uma regra, um contrato, uma restrição de dados, um comportamento de referência ou uma avaliação humana estruturada. Se implementação e testes vêm da mesma interpretação incompleta, ambos concordam — e ambos falham no requisito real.' },
+    oracle: {
+      situation: 'Um endpoint de exportação só deve incluir dados do cliente autenticado. O agente escreveu o endpoint e pergunta qual teste acrescentar.',
+      question: 'Qual teste dá a evidência mais forte?',
+      options: [
+        { label: 'Verificar que a resposta é 200 e tem content type de CSV.', result: '“Retornou um CSV” cobre uma propriedade minúscula. Um vazamento entre clientes passa nesse teste.', verdict: 'bad' },
+        { label: 'Fazer snapshot do CSV gerado para o cliente A.', result: 'Detecta mudanças, não correção — o snapshot já pode conter linhas de outro cliente.', verdict: 'ok' },
+        { label: 'Pedir a um segundo agente que revise o endpoint.', result: 'Ajuda a explorar, mas compartilha a mesma interpretação e pontos cegos. Independência vem de evidências com origens diferentes.', verdict: 'ok' },
+        { label: 'Dois clientes com dados semelhantes; A tenta exportar usando identificadores de B; nenhuma linha de B pode aparecer.', result: 'Isso testa a fronteira de autorização que realmente importa.', verdict: 'best' },
+      ],
+    },
+    opq: 'Qual erro relevante passaria despercebido se esse teste fosse o único sinal de qualidade?',
+    l3: { label: 'Escolher a forma de evidência', title: 'Ajuste a evidência ao risco', intro: 'Cada tipo de evidência detecta alguns erros e é cego a outros. As intensidades abaixo são uma síntese aplicada deste curso a partir do quadro de decisão do relatório — adapte ao seu domínio.' },
+    meta: '<strong>Relações metamórficas</strong> são oráculos poderosos: uma transformação sem perdas seguida da inversa preserva o dado; acrescentar um filtro conjuntivo ao mesmo conjunto, antes da paginação, nunca aumenta o resultado. O valor vem da relação testada e de suas condições de validade.',
+    l4: { label: 'A economia dos testes', title: 'Escrever testes ficou barato. Executá-los e confiar neles, não.', intro: 'Você ainda paga execução, falhas intermitentes e ambientes. Amplie evidência onde ela reduz risco ou trabalho humano — mais testes de contrato, casos adversos e jornadas críticas — mantendo feedback rápido e interpretável.' },
+    carlini: 'No experimento do compilador C com agentes paralelos, o trabalho do autor se concentrou no ambiente, nos verificadores e no feedback; referências externas ajudaram a isolar problemas para execução independente. Um experimento de capacidade, com limitações reconhecidas. [F22]',
+    l5: { label: 'A revisão humana muda de distribuição', title: 'Automatizar — ou manter julgamento humano?', intro: 'Para reduzir revisão manual de forma sustentável, saiba quais defeitos seus mecanismos detectam, acompanhe o que escapa e mantenha capacidade de recuperação. Classifique estas atividades de revisão.' },
+    rbuckets: [
+      { id: 'auto', label: 'Automatizar', color: '#22d3ee', hint: 'Classes mecânicas e bem controladas' },
+      { id: 'human', label: 'Julgamento humano', color: '#fbbf24', hint: 'Requisitos, fronteiras de confiança, consequências' },
+    ],
+    ritems: [
+      { text: 'Estilo de código e convenções de formatação.', bucket: 'auto', why: 'Regras mecânicas pertencem a linters e formatadores.' },
+      { text: 'Esta mudança corresponde de fato ao requisito acordado?', bucket: 'human', why: 'Requisitos precisam de um oráculo independente da implementação.' },
+      { text: 'Verificações repetitivas de política (cabeçalhos de licença, APIs proibidas).', bucket: 'auto', why: 'Políticas determinísticas são perfeitas para automação.' },
+      { text: 'Uma mudança em quem acessa dados de cobrança.', bucket: 'human', why: 'Fronteiras de confiança e decisões de alta consequência merecem atenção humana.' },
+      { text: 'Uma refatoração de renomeação verificável mecanicamente.', bucket: 'auto', why: 'Compilador e testes verificam; cabe um fluxo diferente, mais leve.' },
+      { text: 'Uma remoção de dados com evidência fraca de testes.', bucket: 'human', why: 'Mudanças sem boa evidência e difíceis de reverter exigem decisão.' },
+    ],
+    l6: { label: 'Avaliar seu fluxo com IA', title: 'Uma suíte pequena vale mais que um benchmark grande', intro: 'Comece com tarefas reais representativas: correção localizada, mudança entre módulos, investigação, alteração de interface, migração e requisito ambíguo.' },
+    cycle: [
+      { title: 'Selecionar tarefas reais', body: 'Escolha tarefas representativas, inclusive as que já falharam. Reserve algumas para não adaptar o processo a elas.' },
+      { title: 'Registrar a configuração', body: 'Estado inicial, resultado esperado, critérios, versão do código, configuração do agente.' },
+      { title: 'Restaurar estado conhecido', body: 'Cada tentativa começa limpa — sem dados, caches ou efeitos de uma execução anterior.' },
+      { title: 'Executar e repetir', body: 'Compare configurações em condições semelhantes; repita quando a variabilidade puder mudar a decisão.' },
+      { title: 'Medir o que importa', body: 'Resultado correto, custo, tempo humano, regressões e ações fora do escopo.' },
+      { title: 'Confirmar no artefato', body: 'Verifique arquivo, testes, banco ou implantação — não a narração do agente. Separe verificações feitas, impossíveis e em aberto.' },
+    ],
+    center: 'Ciclo de avaliação',
+    big: 'Uma única demonstração favorável é ponto de partida para investigação — não uma conclusão.',
+    takeaways: [
+      'Avalie o <strong>software</strong> e também o <strong>processo com agentes</strong> que o produziu.',
+      'Saiba de onde vem seu <strong>oráculo</strong>; a independência mais forte vem de evidências com origens diferentes.',
+      'Escolha a evidência pelo <strong>risco</strong>: integração com banco real para corridas, cenários com dois clientes para autorização, carga para latência.',
+      'Desloque a revisão humana para <strong>requisitos, fronteiras de confiança e mudanças com evidência fraca</strong>; automatize o mecânico.',
+    ],
+    quiz: [
+      { q: 'Implementação e testes foram gerados a partir do mesmo ticket ambíguo. Qual o risco?', options: ['Os testes serão intermitentes.', 'Os dois podem concordar entre si e ainda assim falhar no requisito real.', 'A cobertura ficará alta demais.', 'Nenhum, se os testes passarem.'], answer: 1, explain: 'Um oráculo derivado da mesma interpretação incompleta não detecta que essa interpretação está errada.' },
+      { q: 'Que evidência melhor detecta uma disputa pela última unidade de estoque?', options: ['Testes unitários com mocks.', 'Tipos estáticos.', 'Testes de integração com banco real e barreiras de sincronização.', 'Revisão de código por outro agente.'], answer: 2, explain: 'Mocks não mostram bloqueio e isolamento; testes de integração coordenados mostram.' },
+      { q: 'Um agente diz “todos os testes passaram”. O que o registro final deve conter?', options: ['Essa frase basta.', 'Quais verificações rodaram em qual versão, quais foram impossíveis e quais hipóteses seguem abertas.', 'A nota de confiança do agente.', 'Apenas as falhas.'], answer: 1, explain: 'O sucesso narrado precisa ser confirmado no artefato pertinente e registrado com precisão.' },
+    ],
+  },
+}[lang];
+---
+
+<Lesson n="7.1" label={c.l1.label} title={c.l1.title} wide>
+  <p slot="intro">{c.l1.intro}</p>
+  <div class="grid gap-5 md:grid-cols-2">
+    {c.two.map(([t, b, h], i) => (
+      <div class="glass spotlight p-7" style={`--accent:${i ? '#22d3ee' : '#a78bfa'}`} data-reveal={i ? 'right' : 'left'}>
+        <p class="eyebrow">0{i + 1}</p>
+        <h3 class="mt-3 font-serif text-4xl">{t}</h3>
+        <p class="mt-3 text-zinc-300">{b}</p>
+        <p class="mt-5 font-mono text-[0.65rem] tracking-[0.2em] text-zinc-500 uppercase">{c.how}</p>
+        <p class="mt-1 text-sm text-zinc-400">{h}</p>
+      </div>
+    ))}
+  </div>
+</Lesson>
+
+<Lesson n="7.2" label={c.l2.label} title={c.l2.title} wide>
+  <p slot="intro" set:html={c.l2.intro} />
+  <Scenario client:visible lang={lang} situation={c.oracle.situation} question={c.oracle.question} options={c.oracle.options as any} />
+</Lesson>
+
+<BigStatement>{c.opq}</BigStatement>
+
+<Lesson n="7.3" label={c.l3.label} title={c.l3.title} wide>
+  <p slot="intro">{c.l3.intro}</p>
+  <EvidenceExplorer client:visible lang={lang} />
+  <div class="max-w-3xl"><Callout kind="synthesis" lang={lang}><p set:html={c.meta} /></Callout></div>
+</Lesson>
+
+<Lesson n="7.4" label={c.l4.label} title={c.l4.title}>
+  <p slot="intro">{c.l4.intro}</p>
+  <Callout kind="evidence" lang={lang} source="Carlini"><p>{c.carlini}</p></Callout>
+</Lesson>
+
+<Lesson n="7.5" label={c.l5.label} title={c.l5.title} wide>
+  <p slot="intro">{c.l5.intro}</p>
+  <Sorter client:visible lang={lang} prompt={c.l5.label} buckets={c.rbuckets} items={c.ritems} />
+</Lesson>
+
+<Lesson n="7.6" label={c.l6.label} title={c.l6.title} wide>
+  <p slot="intro">{c.l6.intro}</p>
+  <Cycle client:visible lang={lang} steps={c.cycle} center={c.center} />
+</Lesson>
+
+<BigStatement>{c.big}</BigStatement>
+
+<Takeaways lang={lang} items={c.takeaways} />
+<section class="pb-10"><div class="container-x"><div data-reveal><Quiz client:visible lang={lang} questions={c.quiz} /></div></div></section>

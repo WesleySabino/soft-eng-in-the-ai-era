@@ -1,0 +1,228 @@
+---
+import Lesson from '../components/ui/Lesson.astro';
+import Callout from '../components/ui/Callout.astro';
+import Takeaways from '../components/ui/Takeaways.astro';
+import BigStatement from '../components/ui/BigStatement.astro';
+import Quiz from '../components/islands/Quiz.tsx';
+import ComplexityViz from '../components/islands/ComplexityViz.tsx';
+import StepSim from '../components/islands/StepSim.tsx';
+import Scenario from '../components/islands/Scenario.tsx';
+import CardDeck from '../components/islands/CardDeck.tsx';
+import { CHAPTERS, type Lang } from '../data/chapters';
+import { chapterUrl } from '../lib/paths';
+
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const caseUrl = chapterUrl(lang, CHAPTERS[10]);
+
+const c = {
+  en: {
+    l1: { label: 'Semantics before memory', title: 'Read code like an execution, not a text', intro: 'AI can produce the syntax of an async routine. Judgment means knowing whether cancellation propagates, whether a task is orphaned, whether exceptions are lost and whether resources are released. Test your mental model.' },
+    predictTitle: 'Predict the behavior',
+    predict: [
+      { q: 'await Promise.all([fetchA(), fetchB(), fetchC()]) — fetchB rejects after 50 ms. What happens to fetchA and fetchC?', options: ['They are cancelled automatically.', 'They keep running; their results are ignored unless you cancel them explicitly (e.g. AbortController).', 'Promise.all waits for all of them, then rejects.', 'The whole process crashes.'], answer: 1, explain: 'Rejection short-circuits the await, but the other requests stay in flight. Orphaned work and leaked resources are exactly what a mental model of execution catches.' },
+      { q: 'A function opens a file and a connection, then throws before closing them. There is no try/finally (or with/using). What is the risk?', options: ['None — the runtime closes everything immediately.', 'The handles leak until garbage collection or process exit, possibly exhausting the pool.', 'The exception is swallowed.', 'The file is deleted.'], answer: 1, explain: 'Resource lifetime is semantics, not syntax. Under load, leaked connections become an outage.' },
+    ],
+    criterion: '<strong>Practical criterion:</strong> given new code, predict an important behavior, create a case that confirms or refutes the prediction, and explain the result. You can use AI in the investigation — but the understanding must become demonstrable.',
+    cs2023: 'The CS2023 curriculum (ACM, IEEE-CS, AAAI) already distinguished changing activities from enduring fundamentals: greater abstraction, comprehension, verification and decomposition coexist with the need to evaluate algorithms and programs. [F14]',
+    l2: { label: 'Algorithms, complexity, representation', title: 'Recognize the shape of the cost', intro: 'You can delegate writing a search and still need to notice that composing two simple operations created quadratic cost. Drag the volume and watch two “equally fine” implementations diverge.' },
+    l3: { label: 'Idempotency and side effects', title: 'No response does not mean no effect', intro: 'Timeouts, retries and partial failures sit at the heart of many systems — and of agent tools. An idempotency contract lets a call be repeated without adding the unwanted effect. Step through both versions.' },
+    sim: {
+      title: 'Retry after timeout',
+      actors: [{ id: 'client', label: 'Client / agent tool', color: '#a78bfa' }, { id: 'server', label: 'Reservation API + DB', color: '#22d3ee' }],
+      labels: { available: 'Units available', reservations: 'Reservations', keys: 'Idempotency keys stored' },
+      modes: [
+        { id: 'naive', label: 'Naive retry', outcome: { ok: false, text: 'Two reservations for one intent — the customer is charged twice.' }, steps: [
+          { actor: 'client', text: 'POST /reservations {item: 42, qty: 1}', note: 'The client asks for one unit.', state: { available: 5, reservations: 0, keys: 0 } },
+          { actor: 'server', text: 'INSERT reservation; available 5→4; COMMIT', note: 'The server does the work and commits…', state: { available: 4, reservations: 1, keys: 0 } },
+          { actor: 'client', text: '⏱ timeout — no response', note: '…but the response is lost. Absence of a response is not absence of an effect.', state: { available: 4, reservations: 1, keys: 0 }, tone: 'warn' },
+          { actor: 'client', text: 'retry POST /reservations {item: 42, qty: 1}', note: 'The client (or an agent tool) retries the same request.', state: { available: 4, reservations: 1, keys: 0 } },
+          { actor: 'server', text: 'INSERT reservation; available 4→3; COMMIT', note: 'Nothing distinguishes the retry from a new intent: the effect happens twice.', state: { available: 3, reservations: 2, keys: 0 }, tone: 'bad' },
+        ] },
+        { id: 'key', label: 'Idempotency key', outcome: { ok: true, text: 'One intent, one effect — and a defined answer for every repetition.' }, steps: [
+          { actor: 'client', text: 'POST /reservations  Idempotency-Key: k-7f3  {item: 42, qty: 1}', note: 'The client identifies its intent with a key.', state: { available: 5, reservations: 0, keys: 0 } },
+          { actor: 'server', text: 'BEGIN; store k-7f3 + reservation + decrement; COMMIT', note: 'Key, effect and retrievable result are written in the same transaction.', state: { available: 4, reservations: 1, keys: 1 } },
+          { actor: 'client', text: '⏱ timeout — no response', note: 'The response is lost again.', state: { available: 4, reservations: 1, keys: 1 }, tone: 'warn' },
+          { actor: 'client', text: 'retry with Idempotency-Key: k-7f3', note: 'The retry carries the same key.', state: { available: 4, reservations: 1, keys: 1 } },
+          { actor: 'server', text: 'key found, params match → return stored result', note: 'The server recognizes the intent and returns the original result — no new effect.', state: { available: 4, reservations: 1, keys: 1 }, tone: 'ok' },
+          { actor: 'client', text: 'same key, qty: 2 → 409 Conflict', note: 'Reusing the key with different content gets the explicitly defined result: a conflict.', state: { available: 4, reservations: 1, keys: 1 }, tone: 'ok' },
+        ] },
+      ],
+    },
+    aws: 'The Amazon Builders’ Library describes idempotency as a contract with identification of intent and explicit handling of repeated requests. The skill is defining that contract and verifying it — including under concurrency. [F29]',
+    l4: { label: 'Data and concurrency', title: 'Three questions every data change must answer', intro: 'A query can run without error and still duplicate rows in a join or count the wrong entity. A transaction can be valid and insufficient for a concurrent business rule. “Put it in a transaction” is not the whole solution. [F28]' },
+    dq: ['What happens when two requests arrive at the same time?', 'What happens when one fails after writing?', 'What happens when a migration must coexist with different versions of the application?'],
+    caseCta: 'See a race condition simulated in the case study →',
+    big: 'AI can produce layers, adapters and services in seconds. The engineer must demand a reason for each one to exist.',
+    l5: { label: 'Debugging as causal investigation', title: 'Which observation would change your hypothesis?', intro: 'AI expands your ability to surface causes and prepare experiments. Your job is keeping the investigation tied to the real phenomenon.' },
+    dbg: {
+      situation: 'After a release, p99 latency of the checkout endpoint jumped from 300 ms to 2.4 s. The agent proposes several fixes.',
+      question: 'What is the best next step?',
+      options: [
+        { label: 'Add a cache in front of the endpoint.', result: 'It may hide the symptom and introduce inconsistency — without ever knowing the cause.', verdict: 'bad' },
+        { label: 'Scale up to twice as many instances.', result: 'If the time is spent waiting on a lock or a dependency, more instances can make contention worse.', verdict: 'bad' },
+        { label: 'Ask the agent to rewrite the endpoint “to be faster”.', result: 'A large change without a hypothesis: you won’t know what fixed it — or what new problem it introduced.', verdict: 'ok' },
+        { label: 'Use a trace to separate CPU, I/O, locking, queueing, network and dependencies — and predict which signal should change if your hypothesis is right.', result: 'Now experiments can discriminate between hypotheses, and you can tell when a fix merely moved the problem.', verdict: 'best' },
+      ],
+    },
+    l6: { label: 'Operations and observability', title: 'The system must be understandable while running', intro: 'Logs describe events, metrics follow aggregate behavior, traces relate the steps of one operation — OpenTelemetry gives them a common foundation. [F31] Generating a dashboard can be delegated; knowing whether it answers the operational question cannot.' },
+    signals: [['Latency', 'Look at the tails, and separate successful from failed requests.'], ['Traffic', 'Demand on the system, in the unit that matters.'], ['Errors', 'Explicit failures, wrong content and policy violations.'], ['Saturation', 'How “full” the most constrained resource is.']],
+    sre: 'The four golden signals from Google’s SRE book. [F32]',
+    l7: { label: 'Product, domain and UX', title: 'The easier it is to build, the more the choice matters', intro: 'The HEART framework translates product goals into user-centered signals and metrics. [F37] AI can explore alternatives; success criteria must represent real people — including keyboard navigation, error states and accessibility.' },
+    heart: [
+      { tag: 'H', title: 'Happiness', summary: 'Attitudes: satisfaction, perceived ease of use.', detail: 'Measured through surveys and feedback. Useful to detect whether a faster flow also feels better.', example: 'Satisfaction score after completing a reservation.' },
+      { tag: 'E', title: 'Engagement', summary: 'Depth of involvement with the product.', detail: 'Frequency, intensity or depth of interaction over a period.', example: 'Reservations per active customer per week.' },
+      { tag: 'A', title: 'Adoption', summary: 'New users of a product or feature.', detail: 'Who starts using the new capability in a given time window.', example: 'Customers who used the new bulk reservation in its first month.' },
+      { tag: 'R', title: 'Retention', summary: 'Users who keep coming back.', detail: 'The rate at which users from one period are still active in the next.', example: 'Customers still reserving 90 days later.' },
+      { tag: 'T', title: 'Task success', summary: 'Efficiency, effectiveness and errors.', detail: 'Whether users complete the task, how long it takes and how often they fail.', example: 'Time to complete a reservation; percentage that ends in an error state.' },
+    ],
+    takeaways: [
+      'Understanding code means modelling its <strong>execution</strong>: state, errors, resources, cancellation and concurrency.',
+      'Recognize the <strong>shape of the cost</strong>; volume reveals what review with small data hides.',
+      'Absence of a response is not absence of an effect: design <strong>idempotency contracts</strong> for anything that can be retried.',
+      'Debug with <strong>hypotheses that discriminate</strong>, observe with the right signals, and keep success criteria tied to real users.',
+    ],
+    quiz: [
+      { q: 'An agent tool times out after calling “deploy”. What is the safest assumption?', options: ['The deploy didn’t happen; retry immediately.', 'The deploy may or may not have happened; check a queryable state or retry with the same operation identifier.', 'The deploy failed; roll back.', 'Ignore it — timeouts are rare.'], answer: 1, explain: 'Absence of a response is not absence of effect. Operation IDs and queryable state make recovery reliable.' },
+      { q: 'Two implementations pass review on a 100-row fixture. What should you still check?', options: ['Variable naming.', 'How the cost grows with real volume.', 'Whether the agent used the newest model.', 'Nothing — tests passed.'], answer: 1, explain: 'Asymptotic and concrete costs (allocation, network, contention) only show at realistic volume.' },
+      { q: 'Before running a debugging experiment, what does the report recommend?', options: ['Add logging everywhere.', 'Predict which signal should change if your hypothesis is correct.', 'Ask several agents for fixes.', 'Increase timeouts.'], answer: 1, explain: 'Comparing prediction and observation teaches you to recognize when a fix only moved the problem.' },
+    ],
+  },
+  pt: {
+    l1: { label: 'Semântica antes de memória', title: 'Leia código como uma execução, não como texto', intro: 'A IA pode produzir a sintaxe de uma rotina assíncrona. Julgamento é saber se o cancelamento se propaga, se uma tarefa fica órfã, se exceções se perdem e se recursos são liberados. Teste seu modelo mental.' },
+    predictTitle: 'Preveja o comportamento',
+    predict: [
+      { q: 'await Promise.all([fetchA(), fetchB(), fetchC()]) — fetchB rejeita após 50 ms. O que acontece com fetchA e fetchC?', options: ['São canceladas automaticamente.', 'Continuam executando; seus resultados são ignorados, a menos que você as cancele explicitamente (ex.: AbortController).', 'Promise.all espera todas e depois rejeita.', 'O processo inteiro cai.'], answer: 1, explain: 'A rejeição interrompe o await, mas as outras requisições seguem em andamento. Trabalho órfão e recursos vazados são exatamente o que um modelo mental de execução detecta.' },
+      { q: 'Uma função abre um arquivo e uma conexão e lança exceção antes de fechá-los. Não há try/finally (nem with/using). Qual o risco?', options: ['Nenhum — o runtime fecha tudo na hora.', 'Os recursos vazam até a coleta de lixo ou o fim do processo, podendo esgotar o pool.', 'A exceção é engolida.', 'O arquivo é apagado.'], answer: 1, explain: 'O ciclo de vida de recursos é semântica, não sintaxe. Sob carga, conexões vazadas viram indisponibilidade.' },
+    ],
+    criterion: '<strong>Critério prático:</strong> diante de código novo, prever um comportamento importante, criar um caso que confirme ou refute a previsão e explicar o resultado. Você pode usar IA na investigação — mas o entendimento precisa se tornar demonstrável.',
+    cs2023: 'O currículo CS2023 (ACM, IEEE-CS, AAAI) já distinguia a mudança de atividades da permanência dos fundamentos: maior abstração, compreensão, verificação e decomposição convivem com a necessidade de avaliar algoritmos e programas. [F14]',
+    l2: { label: 'Algoritmos, complexidade, representação', title: 'Reconheça a forma do custo', intro: 'Você pode delegar a escrita de uma busca e ainda precisar perceber que a composição de duas operações simples criou custo quadrático. Arraste o volume e veja duas implementações “igualmente corretas” divergirem.' },
+    l3: { label: 'Idempotência e efeitos colaterais', title: 'Ausência de resposta não é ausência de efeito', intro: 'Timeout, repetição e falhas parciais estão no centro de muitos sistemas — e das ferramentas de agentes. Um contrato de idempotência permite repetir uma chamada sem acrescentar o efeito indesejado. Avance pelas duas versões.' },
+    sim: {
+      title: 'Repetição após timeout',
+      actors: [{ id: 'client', label: 'Cliente / ferramenta do agente', color: '#a78bfa' }, { id: 'server', label: 'API de reservas + banco', color: '#22d3ee' }],
+      labels: { available: 'Unidades disponíveis', reservations: 'Reservas', keys: 'Chaves de idempotência' },
+      modes: [
+        { id: 'naive', label: 'Repetição ingênua', outcome: { ok: false, text: 'Duas reservas para uma intenção — o cliente é cobrado duas vezes.' }, steps: [
+          { actor: 'client', text: 'POST /reservas {item: 42, qtd: 1}', note: 'O cliente pede uma unidade.', state: { available: 5, reservations: 0, keys: 0 } },
+          { actor: 'server', text: 'INSERT reserva; disponível 5→4; COMMIT', note: 'O servidor faz o trabalho e confirma…', state: { available: 4, reservations: 1, keys: 0 } },
+          { actor: 'client', text: '⏱ timeout — sem resposta', note: '…mas a resposta se perde. Ausência de resposta não é ausência de efeito.', state: { available: 4, reservations: 1, keys: 0 }, tone: 'warn' },
+          { actor: 'client', text: 'repete POST /reservas {item: 42, qtd: 1}', note: 'O cliente (ou uma ferramenta do agente) repete a mesma requisição.', state: { available: 4, reservations: 1, keys: 0 } },
+          { actor: 'server', text: 'INSERT reserva; disponível 4→3; COMMIT', note: 'Nada distingue a repetição de uma intenção nova: o efeito acontece duas vezes.', state: { available: 3, reservations: 2, keys: 0 }, tone: 'bad' },
+        ] },
+        { id: 'key', label: 'Chave de idempotência', outcome: { ok: true, text: 'Uma intenção, um efeito — e uma resposta definida para cada repetição.' }, steps: [
+          { actor: 'client', text: 'POST /reservas  Idempotency-Key: k-7f3  {item: 42, qtd: 1}', note: 'O cliente identifica sua intenção com uma chave.', state: { available: 5, reservations: 0, keys: 0 } },
+          { actor: 'server', text: 'BEGIN; grava k-7f3 + reserva + decremento; COMMIT', note: 'Chave, efeito e resultado recuperável são gravados na mesma transação.', state: { available: 4, reservations: 1, keys: 1 } },
+          { actor: 'client', text: '⏱ timeout — sem resposta', note: 'A resposta se perde de novo.', state: { available: 4, reservations: 1, keys: 1 }, tone: 'warn' },
+          { actor: 'client', text: 'repete com Idempotency-Key: k-7f3', note: 'A repetição carrega a mesma chave.', state: { available: 4, reservations: 1, keys: 1 } },
+          { actor: 'server', text: 'chave encontrada, parâmetros iguais → devolve resultado gravado', note: 'O servidor reconhece a intenção e devolve o resultado original — sem novo efeito.', state: { available: 4, reservations: 1, keys: 1 }, tone: 'ok' },
+          { actor: 'client', text: 'mesma chave, qtd: 2 → 409 Conflict', note: 'Reutilizar a chave com outro conteúdo gera o resultado explicitamente definido: conflito.', state: { available: 4, reservations: 1, keys: 1 }, tone: 'ok' },
+        ] },
+      ],
+    },
+    aws: 'A Amazon Builders’ Library descreve idempotência como um contrato com identificação de intenção e tratamento explícito de solicitações repetidas. A habilidade é definir esse contrato e verificar seu cumprimento — inclusive sob concorrência. [F29]',
+    l4: { label: 'Dados e concorrência', title: 'Três perguntas que toda mudança de dados precisa responder', intro: 'Uma consulta pode executar sem erro e duplicar registros num join ou contar a entidade errada. Uma transação pode ser válida e insuficiente para uma regra de negócio concorrente. “Coloque em uma transação” não descreve toda a solução. [F28]' },
+    dq: ['O que acontece quando duas requisições chegam juntas?', 'O que acontece quando uma falha depois de gravar?', 'O que acontece quando uma migração precisa conviver com versões diferentes da aplicação?'],
+    caseCta: 'Veja uma condição de corrida simulada no caso técnico →',
+    big: 'A IA produz camadas, adaptadores e serviços em segundos. O engenheiro precisa exigir uma razão para a existência de cada um.',
+    l5: { label: 'Depuração como investigação causal', title: 'Que observação mudaria sua hipótese?', intro: 'A IA amplia sua capacidade de levantar causas e preparar experimentos. Seu trabalho é manter a investigação conectada ao fenômeno real.' },
+    dbg: {
+      situation: 'Depois de um release, a latência p99 do endpoint de checkout saltou de 300 ms para 2,4 s. O agente propõe várias correções.',
+      question: 'Qual é o melhor próximo passo?',
+      options: [
+        { label: 'Colocar um cache na frente do endpoint.', result: 'Pode esconder o sintoma e introduzir inconsistência — sem nunca saber a causa.', verdict: 'bad' },
+        { label: 'Dobrar o número de instâncias.', result: 'Se o tempo é gasto esperando um bloqueio ou uma dependência, mais instâncias podem piorar a contenção.', verdict: 'bad' },
+        { label: 'Pedir ao agente para reescrever o endpoint “para ficar mais rápido”.', result: 'Uma mudança grande sem hipótese: você não saberá o que resolveu — nem que problema novo surgiu.', verdict: 'ok' },
+        { label: 'Usar um trace para separar CPU, I/O, bloqueio, fila, rede e dependências — e prever qual sinal deve mudar se sua hipótese estiver certa.', result: 'Agora os experimentos discriminam hipóteses, e você percebe quando uma correção apenas deslocou o problema.', verdict: 'best' },
+      ],
+    },
+    l6: { label: 'Operação e observabilidade', title: 'O sistema precisa ser compreensível em execução', intro: 'Logs descrevem eventos, métricas acompanham comportamento agregado, traces relacionam as etapas de uma operação — o OpenTelemetry oferece uma base comum. [F31] Gerar um painel pode ser delegado; saber se ele responde à pergunta de operação, não.' },
+    signals: [['Latência', 'Olhe as caudas e separe requisições bem-sucedidas das que falharam.'], ['Tráfego', 'Demanda sobre o sistema, na unidade que importa.'], ['Erros', 'Falhas explícitas, conteúdo errado e violações de política.'], ['Saturação', 'O quão “cheio” está o recurso mais restrito.']],
+    sre: 'Os quatro sinais de ouro do livro de SRE do Google. [F32]',
+    l7: { label: 'Produto, domínio e UX', title: 'Quanto mais fácil construir, mais a escolha importa', intro: 'O framework HEART traduz objetivos de produto em sinais e métricas centrados no usuário. [F37] A IA pode explorar alternativas; os critérios de sucesso precisam representar pessoas reais — inclusive navegação por teclado, estados de erro e acessibilidade.' },
+    heart: [
+      { tag: 'H', title: 'Happiness (satisfação)', summary: 'Atitudes: satisfação, facilidade percebida.', detail: 'Medida por pesquisas e feedback. Útil para saber se um fluxo mais rápido também parece melhor.', example: 'Nota de satisfação após concluir uma reserva.' },
+      { tag: 'E', title: 'Engagement (engajamento)', summary: 'Profundidade do envolvimento com o produto.', detail: 'Frequência, intensidade ou profundidade de interação num período.', example: 'Reservas por cliente ativo por semana.' },
+      { tag: 'A', title: 'Adoption (adoção)', summary: 'Novos usuários de um produto ou recurso.', detail: 'Quem começa a usar a nova capacidade numa janela de tempo.', example: 'Clientes que usaram a nova reserva em lote no primeiro mês.' },
+      { tag: 'R', title: 'Retention (retenção)', summary: 'Usuários que continuam voltando.', detail: 'A taxa de usuários de um período que seguem ativos no seguinte.', example: 'Clientes que ainda reservam 90 dias depois.' },
+      { tag: 'T', title: 'Task success (sucesso na tarefa)', summary: 'Eficiência, eficácia e erros.', detail: 'Se os usuários concluem a tarefa, quanto tempo levam e com que frequência falham.', example: 'Tempo para concluir uma reserva; percentual que termina em estado de erro.' },
+    ],
+    takeaways: [
+      'Entender código é modelar sua <strong>execução</strong>: estado, erros, recursos, cancelamento e concorrência.',
+      'Reconheça a <strong>forma do custo</strong>; o volume revela o que a revisão com poucos dados esconde.',
+      'Ausência de resposta não é ausência de efeito: projete <strong>contratos de idempotência</strong> para tudo que pode ser repetido.',
+      'Depure com <strong>hipóteses que discriminam</strong>, observe os sinais certos e mantenha os critérios de sucesso ligados a usuários reais.',
+    ],
+    quiz: [
+      { q: 'Uma ferramenta do agente dá timeout após chamar “deploy”. Qual a suposição mais segura?', options: ['O deploy não aconteceu; repita imediatamente.', 'O deploy pode ou não ter acontecido; consulte um estado ou repita com o mesmo identificador de operação.', 'O deploy falhou; reverta.', 'Ignore — timeouts são raros.'], answer: 1, explain: 'Ausência de resposta não é ausência de efeito. Identificadores de operação e estado consultável tornam a recuperação confiável.' },
+      { q: 'Duas implementações passam na revisão com uma massa de 100 linhas. O que ainda verificar?', options: ['Nomes de variáveis.', 'Como o custo cresce com volume real.', 'Se o agente usou o modelo mais novo.', 'Nada — os testes passaram.'], answer: 1, explain: 'Custos assintóticos e concretos (alocação, rede, contenção) só aparecem com volume realista.' },
+      { q: 'Antes de rodar um experimento de depuração, o que o relatório recomenda?', options: ['Adicionar logs em tudo.', 'Prever qual sinal deve mudar se a hipótese estiver correta.', 'Pedir correções a vários agentes.', 'Aumentar os timeouts.'], answer: 1, explain: 'Comparar previsão e observação ensina a reconhecer quando uma correção apenas deslocou o problema.' },
+    ],
+  },
+}[lang];
+---
+
+<Lesson n="5.1" label={c.l1.label} title={c.l1.title} wide>
+  <p slot="intro">{c.l1.intro}</p>
+  <Quiz client:visible lang={lang} questions={c.predict} title={c.predictTitle} />
+  <div class="mt-2 grid gap-x-6 lg:grid-cols-2">
+    <Callout kind="tip" lang={lang}><p set:html={c.criterion} /></Callout>
+    <Callout kind="evidence" lang={lang} source="CS2023"><p>{c.cs2023}</p></Callout>
+  </div>
+</Lesson>
+
+<Lesson n="5.2" label={c.l2.label} title={c.l2.title} wide>
+  <p slot="intro">{c.l2.intro}</p>
+  <ComplexityViz client:visible lang={lang} />
+</Lesson>
+
+<Lesson n="5.3" label={c.l3.label} title={c.l3.title} wide>
+  <p slot="intro">{c.l3.intro}</p>
+  <StepSim client:visible lang={lang} title={c.sim.title} actors={c.sim.actors} modes={c.sim.modes as any} stateLabels={c.sim.labels} />
+  <div class="max-w-3xl"><Callout kind="evidence" lang={lang} source="AWS"><p>{c.aws}</p></Callout></div>
+</Lesson>
+
+<Lesson n="5.4" label={c.l4.label} title={c.l4.title} wide>
+  <p slot="intro">{c.l4.intro}</p>
+  <ol class="grid gap-4 md:grid-cols-3">
+    {c.dq.map((q, i) => (
+      <li class="glass spotlight p-6" data-reveal data-delay={String(i * 0.1)}>
+        <span class="font-serif text-5xl text-[var(--accent)] italic">?</span>
+        <p class="mt-3 font-serif text-2xl leading-snug text-white">{q}</p>
+      </li>
+    ))}
+  </ol>
+  <a href={caseUrl} class="btn-ghost mt-8" data-reveal>{c.caseCta}</a>
+</Lesson>
+
+<BigStatement>{c.big}</BigStatement>
+
+<Lesson n="5.5" label={c.l5.label} title={c.l5.title} wide>
+  <p slot="intro">{c.l5.intro}</p>
+  <Scenario client:visible lang={lang} situation={c.dbg.situation} question={c.dbg.question} options={c.dbg.options as any} />
+</Lesson>
+
+<Lesson n="5.6" label={c.l6.label} title={c.l6.title} wide>
+  <p slot="intro">{c.l6.intro}</p>
+  <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    {c.signals.map(([t, b], i) => (
+      <div class="glass spotlight p-6" data-reveal data-delay={String(i * 0.08)}>
+        <svg viewBox="0 0 120 36" class="h-9 w-full" data-draw aria-hidden="true">
+          <path d={['M0 30 L20 28 L40 29 L60 26 L80 8 L100 24 L120 22', 'M0 26 C20 10 40 30 60 18 S100 6 120 14', 'M0 32 L30 32 L45 30 L60 32 L75 6 L90 31 L120 32', 'M0 34 C40 34 70 28 90 14 S115 4 120 3'][i]} fill="none" stroke="var(--accent)" stroke-width="2" />
+        </svg>
+        <h3 class="mt-4 font-serif text-3xl">{t}</h3>
+        <p class="mt-1 text-sm text-zinc-400">{b}</p>
+      </div>
+    ))}
+  </div>
+  <p class="mt-4 font-mono text-xs text-zinc-500">{c.sre}</p>
+</Lesson>
+
+<Lesson n="5.7" label={c.l7.label} title={c.l7.title} wide>
+  <p slot="intro">{c.l7.intro}</p>
+  <CardDeck client:visible lang={lang} cards={c.heart} cols={3} />
+</Lesson>
+
+<Takeaways lang={lang} items={c.takeaways} />
+<section class="pb-10"><div class="container-x"><div data-reveal><Quiz client:visible lang={lang} questions={c.quiz} /></div></div></section>

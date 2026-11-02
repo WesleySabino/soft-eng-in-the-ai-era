@@ -1,0 +1,26 @@
+---
+/** A labelled note. kind tells the reader how much weight the content bears. */
+import type { Lang } from '../../data/chapters';
+interface Props {
+  kind: 'premise' | 'evidence' | 'synthesis' | 'example' | 'tip';
+  lang: Lang;
+  source?: string;
+}
+const { kind, lang, source } = Astro.props;
+const meta = {
+  premise: { c: '#a78bfa', en: 'Premise', pt: 'Premissa' },
+  evidence: { c: '#22d3ee', en: 'Evidence', pt: 'Evidência' },
+  synthesis: { c: '#fbbf24', en: 'Applied synthesis', pt: 'Síntese aplicada' },
+  example: { c: '#fb7185', en: 'Illustrative example', pt: 'Exemplo ilustrativo' },
+  tip: { c: '#34d399', en: 'Practical criterion', pt: 'Critério prático' },
+}[kind];
+---
+
+<aside class="glass spotlight my-8 p-6 sm:p-7" style={`--accent:${meta.c}`} data-reveal>
+  <p class="flex items-center gap-2 font-mono text-[0.68rem] tracking-[0.2em] uppercase" style={`color:${meta.c}`}>
+    <span class="h-2 w-2 rounded-full" style={`background:${meta.c};box-shadow:0 0 14px ${meta.c}`}></span>
+    {meta[lang]}
+    {source && <span class="text-zinc-500 normal-case tracking-normal">· {source}</span>}
+  </p>
+  <div class="rich mt-3 !text-base"><slot /></div>
+</aside>

@@ -1,0 +1,32 @@
+---
+/** Animated counters (driven by data-count in motion.ts). */
+import type { Lang } from '../../data/chapters';
+interface Props {
+  lang: Lang;
+  items: { value: number; decimals?: number; prefix?: string; suffix?: string; label: string; color?: string }[];
+}
+const { lang, items } = Astro.props;
+const locale = lang === 'pt' ? 'pt-BR' : 'en-US';
+const fmt = (i: Props['items'][number]) =>
+  (i.prefix ?? '') + i.value.toLocaleString(locale, { minimumFractionDigits: i.decimals ?? 0, maximumFractionDigits: i.decimals ?? 0 }) + (i.suffix ?? '');
+---
+
+<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+  {
+    items.map((i, k) => (
+      <div class="glass spotlight p-6" style={i.color ? `--accent:${i.color}` : undefined} data-reveal data-delay={String(k * 0.08)}>
+        <p
+          class="display text-5xl text-[var(--accent)]"
+          data-count={i.value}
+          data-decimals={i.decimals ?? 0}
+          data-prefix={i.prefix ?? ''}
+          data-suffix={i.suffix ?? ''}
+          data-locale={locale}
+        >
+          {fmt(i)}
+        </p>
+        <p class="mt-3 text-sm leading-relaxed text-zinc-400">{i.label}</p>
+      </div>
+    ))
+  }
+</div>

@@ -1,0 +1,80 @@
+---
+import Lesson from '../components/ui/Lesson.astro';
+import Callout from '../components/ui/Callout.astro';
+import Takeaways from '../components/ui/Takeaways.astro';
+import BigStatement from '../components/ui/BigStatement.astro';
+import Quiz from '../components/islands/Quiz.tsx';
+import StudyRebalancer from '../components/islands/StudyRebalancer.tsx';
+import CardDeck from '../components/islands/CardDeck.tsx';
+import type { Lang } from '../data/chapters';
+
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+
+const c = {
+  en: {
+    l1: { label: 'The shift must show up in your agenda', title: 'Rebalance your study week', intro: 'Professional development time is limited. Keeping every old priority and adding agents, context, evaluation and product makes an impossible curriculum. <strong>Adapting requires withdrawing investment</strong> from activities whose value comes mainly from repetitive execution or recall of details.' },
+    note: 'This is an investment recommendation, not a declaration that any activity is universally useless. The minimum to preserve varies with your domain and responsibility.',
+    l2: { label: 'Principles behind the matrix', title: 'Six shifts in how you invest', intro: 'Open each principle for the reasoning and how it looks in practice.' },
+    cards: [
+      { icon: '🔤', title: 'Semantics over syntax', summary: 'Learn how a language represents data, handles errors, manages resources and runs concurrency.', detail: 'Use AI and documentation to recall syntax. The goal is no longer producing any snippet from memory, but recognizing intent, understanding consequences and quickly discovering what you still need to know.', example: 'Short manual exercises remain useful when they reveal a behavior you need to understand.' },
+      { icon: '♻️', title: 'Mechanical repetition leaves the routine', summary: 'Boilerplate, predictable conversions, derived docs.', detail: 'Use generators, deterministic transformations or agents with clear criteria, followed by checks. Delegation should also reach new, demanding changes when the environment provides enough context and verification.', example: 'Look at your week: what did you repeat? Automating it may beat studying another library — especially if the team benefits.' },
+      { icon: '🧩', title: 'Interview algorithms: a contextual decision', summary: 'Practice them for a concrete reason.', detail: 'They can serve a hiring requirement or a reasoning gap; that purpose should be explicit. For on-the-job excellence, prefer exercises about data, complexity, measurement and choosing a solution.', example: 'Compilers, databases, graphics, security, embedded and performance work have their own depth needs.' },
+      { icon: '🔍', title: 'Line-by-line review stops being the only standard', summary: 'It ties production linearly to human attention.', detail: 'Develop controls that evaluate properties, contracts, relevant changes and observed results. Detailed reading remains right for concrete doubts, failures, sensitive boundaries and new trust mechanisms.', example: 'For stable classes of changes, automation plus sampling — while tracking what slips through.' },
+      { icon: '📰', title: 'You don’t need to know every new thing', summary: 'Absorb relevant change on purpose.', detail: 'Ask of each novelty: what concrete limitation does it remove, on which tasks, at what adoption cost? Without an answer, keep it exploratory with a small budget. Competence accumulates by finishing full cycles of work.', example: 'A quarterly review of the tools you actually use beats daily launch-chasing.' },
+      { icon: '🛡️', title: 'What not to deprioritize by mistake', summary: 'Keep the ability to notice problems.', detail: 'Protect domain understanding, causal reasoning, data, security, communication and quality of evidence. Writing a small program can still be the fastest way to understand a mechanism.', example: 'A pedagogical exercise can coexist with a routine where most implementation is delegated.' },
+    ],
+    big: 'Does this increase my ability to delegate with quality? Does this expand the set of problems I can answer for? If both answers are no, there is probably a better investment.',
+    takeaways: [
+      'A fixed learning budget means <strong>adding requires removing</strong>: reduce investment in substitutable execution.',
+      'For each reduced activity, <strong>preserve enough</strong> to evaluate — and reinvest in judgment.',
+      'Study <strong>semantics</strong>, not syntax; replace line-by-line review with <strong>controls</strong> for stable classes of change.',
+      'Never deprioritize the ability to <strong>notice problems</strong>: domain, causal reasoning, data, security and evidence.',
+    ],
+    quiz: [
+      { q: 'Which question should you ask about a new tool before investing study time?', options: ['Is it trending?', 'What concrete limitation does it remove, on which tasks, at what adoption cost?', 'Does it have the most features?', 'Did a competitor adopt it?'], answer: 1, explain: 'Without an answer, keep it exploratory with a small budget.' },
+      { q: 'You stop hand-writing repetitive tests. What must you still preserve?', options: ['Nothing.', 'Understanding of test code and the ability to recognize an inadequate oracle.', 'Typing speed.', 'Memorized assertion APIs.'], answer: 1, explain: 'Reduce manual production, but keep enough understanding to evaluate the evidence.' },
+    ],
+  },
+  pt: {
+    l1: { label: 'A mudança precisa aparecer na agenda', title: 'Rebalanceie sua semana de estudo', intro: 'O tempo de desenvolvimento profissional é limitado. Manter todas as prioridades antigas e acrescentar agentes, contexto, avaliação e produto produz um currículo impossível. <strong>Adaptar-se exige retirar investimento</strong> de atividades cujo valor vem principalmente de execução repetitiva ou recuperação de detalhes.' },
+    note: 'É uma recomendação de investimento, não uma declaração de inutilidade universal de qualquer atividade. O mínimo a preservar varia conforme o domínio e a responsabilidade.',
+    l2: { label: 'Os princípios por trás da matriz', title: 'Seis mudanças na forma de investir', intro: 'Abra cada princípio para ver o raciocínio e como ele aparece na prática.' },
+    cards: [
+      { icon: '🔤', title: 'Semântica acima da sintaxe', summary: 'Aprenda como a linguagem representa dados, trata erros, administra recursos e executa concorrência.', detail: 'Use IA e documentação para recuperar sintaxe. O objetivo deixa de ser produzir qualquer trecho de memória e passa a ser reconhecer a intenção, compreender consequências e descobrir rápido o que falta saber.', example: 'Exercícios manuais curtos continuam úteis quando revelam um comportamento que você precisa entender.' },
+      { icon: '♻️', title: 'Repetição mecânica sai da rotina', summary: 'Boilerplate, conversões previsíveis, documentação derivada.', detail: 'Use geradores, transformações determinísticas ou agentes com critérios claros, seguidos de verificações. A delegação também deve alcançar mudanças novas e exigentes quando o ambiente oferece contexto e verificação suficientes.', example: 'Olhe sua semana: o que você repetiu? Automatizar pode render mais que estudar outra biblioteca — sobretudo se a equipe se beneficia.' },
+      { icon: '🧩', title: 'Algoritmos de entrevista: decisão contextual', summary: 'Treine-os por uma razão concreta.', detail: 'Podem atender a uma exigência de seleção ou a uma lacuna de raciocínio; essa finalidade deve ser explícita. Para excelência no trabalho, prefira exercícios sobre dados, complexidade, medição e escolha de soluções.', example: 'Compiladores, bancos, computação gráfica, segurança, embarcados e desempenho têm necessidades próprias de profundidade.' },
+      { icon: '🔍', title: 'Revisão linha a linha deixa de ser o padrão único', summary: 'Ela amarra a produção linearmente à atenção humana.', detail: 'Desenvolva controles que avaliem propriedades, contratos, alterações relevantes e resultados observados. Leitura detalhada continua certa para dúvidas concretas, falhas, fronteiras sensíveis e novos mecanismos de confiança.', example: 'Para classes estáveis de mudanças, automação e amostragem — acompanhando o que escapa.' },
+      { icon: '📰', title: 'Conhecer todas as novidades não é obrigação', summary: 'Absorva mudanças relevantes de propósito.', detail: 'Pergunte de cada novidade: que limitação concreta ela remove, em quais tarefas e com que custo de adoção? Sem resposta, mantenha-a exploratória e com orçamento pequeno. A competência se acumula ao concluir ciclos completos de trabalho.', example: 'Uma revisão trimestral das ferramentas que você realmente usa vale mais que perseguir lançamentos diariamente.' },
+      { icon: '🛡️', title: 'O que não despriorizar por engano', summary: 'Preserve a capacidade de perceber problemas.', detail: 'Proteja entendimento de domínio, raciocínio causal, dados, segurança, comunicação e qualidade da evidência. Escrever um pequeno programa ainda pode ser o jeito mais rápido de entender um mecanismo.', example: 'Um exercício pedagógico convive com uma rotina em que a maior parte da implementação é delegada.' },
+    ],
+    big: 'Isso aumenta minha capacidade de delegar com qualidade? Isso amplia o conjunto de problemas pelos quais consigo responder? Se ambas forem não, provavelmente há um investimento melhor.',
+    takeaways: [
+      'Orçamento de estudo fixo significa que <strong>acrescentar exige retirar</strong>: reduza investimento em execução substituível.',
+      'Para cada atividade reduzida, <strong>preserve o suficiente</strong> para avaliar — e reinvista em julgamento.',
+      'Estude <strong>semântica</strong>, não sintaxe; troque revisão linha a linha por <strong>controles</strong> em classes estáveis de mudança.',
+      'Nunca despriorize a capacidade de <strong>perceber problemas</strong>: domínio, raciocínio causal, dados, segurança e evidência.',
+    ],
+    quiz: [
+      { q: 'Que pergunta fazer sobre uma ferramenta nova antes de investir tempo de estudo?', options: ['Está em alta?', 'Que limitação concreta ela remove, em quais tarefas e com que custo de adoção?', 'Tem mais recursos?', 'Um concorrente adotou?'], answer: 1, explain: 'Sem resposta, mantenha o estudo exploratório e com orçamento pequeno.' },
+      { q: 'Você deixa de escrever à mão testes repetitivos. O que ainda precisa preservar?', options: ['Nada.', 'Entendimento do código de teste e capacidade de reconhecer um oráculo inadequado.', 'Velocidade de digitação.', 'APIs de asserção decoradas.'], answer: 1, explain: 'Reduza a produção manual, mas mantenha compreensão suficiente para avaliar a evidência.' },
+    ],
+  },
+}[lang];
+---
+
+<Lesson n="9.1" label={c.l1.label} title={c.l1.title} wide>
+  <p slot="intro" set:html={c.l1.intro} />
+  <StudyRebalancer client:visible lang={lang} />
+  <div class="max-w-3xl"><Callout kind="synthesis" lang={lang}><p>{c.note}</p></Callout></div>
+</Lesson>
+
+<Lesson n="9.2" label={c.l2.label} title={c.l2.title} wide>
+  <p slot="intro">{c.l2.intro}</p>
+  <CardDeck client:visible lang={lang} cards={c.cards} cols={3} />
+</Lesson>
+
+<BigStatement>{c.big}</BigStatement>
+
+<Takeaways lang={lang} items={c.takeaways} />
+<section class="pb-10"><div class="container-x"><div data-reveal><Quiz client:visible lang={lang} questions={c.quiz} /></div></div></section>

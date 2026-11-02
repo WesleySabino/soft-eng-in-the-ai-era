@@ -1,0 +1,374 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import PathPicker from '../../components/islands/PathPicker.tsx';
+import { CHAPTERS, LANGS, PARTS, chaptersOfPart, type Lang } from '../../data/chapters';
+import { UI, htmlLang } from '../../i18n/ui';
+import { chapterUrl, homeUrl } from '../../lib/paths';
+import { introHtml } from '../../lib/report';
+
+export function getStaticPaths() {
+  return LANGS.map((lang) => ({ params: { lang } }));
+}
+
+const lang = Astro.params.lang as Lang;
+const other: Lang = lang === 'en' ? 'pt' : 'en';
+const t = UI[lang];
+
+const copy = {
+  en: {
+    eyebrow: 'An interactive course · 18 chapters · EN / PT',
+    title1: 'Software engineering',
+    title2: 'in the AI era',
+    sub: 'Learn the competencies to build better in the present — by playing with the ideas, not just reading them.',
+    beats: ['Code became abundant.', 'Judgment became scarce.', 'Your job is the system that turns intent into reliable outcomes.'],
+    scroll: 'Scroll to bring order to the chaos',
+    thesisLabel: 'The thesis',
+    thesis:
+      'An engineer’s excellence comes to depend on their ability to turn intent into reliable systems, directing AI execution and continuously improving the environment in which people and agents work. Technical mastery is what makes it possible to expand that delegation — and to answer for the result.',
+    chainLabel: 'The new unit of contribution',
+    chainTitle: 'Not lines of code. A useful, understood, verified and sustainable change.',
+    chain: ['Relevant problem', 'Explicit intent', 'Delegable execution', 'Evidence of correctness', 'Observed effect', 'Reusable learning'],
+    chainCta: 'Explore what breaks at each step',
+    partsLabel: 'The journey',
+    partsTitle: 'Four parts. Eighteen interactive chapters.',
+    methodLabel: 'How to trust what you read',
+    methodTitle: 'Every claim carries its label.',
+    methodBody:
+      'The course is built on a targeted review of primary sources from 2025–2026. Throughout the chapters, content is marked by its nature so you always know how much weight it can bear.',
+    types: [
+      ['Premise', 'Ideas from the manifesto that frame the problem.'],
+      ['Evidence', 'Research, documentation and published experiences — with their limits.'],
+      ['Applied synthesis', 'Recommendations derived from sources plus engineering reasoning.'],
+      ['Example', 'Explicitly illustrative scenarios and numbers — not observed results.'],
+    ],
+    introSummary: 'Read the report’s full methodology note',
+    pathsLabel: 'Reading paths',
+    pathsTitle: 'What do you want to get out of this?',
+    endTitle: 'Start with the shift.',
+    endBody: 'Each chapter takes a few minutes and ends with a quick check. Your progress is saved in this browser only.',
+    concepts: ['Context engineering', 'Correctness oracles', 'Idempotency', 'Task contracts', 'Agent harness', 'Evals', 'Least privilege', 'Transactional outbox', 'DORA metrics', 'Prompt injection', 'Skills', 'Observability', 'Toil', 'Amdahl’s law'],
+  },
+  pt: {
+    eyebrow: 'Um curso interativo · 18 capítulos · EN / PT',
+    title1: 'Engenharia de software',
+    title2: 'na era da IA',
+    sub: 'Aprenda as competências para construir melhor no presente — interagindo com as ideias, não apenas lendo.',
+    beats: ['O código ficou abundante.', 'O julgamento ficou escasso.', 'Seu trabalho é o sistema que transforma intenção em resultados confiáveis.'],
+    scroll: 'Role para colocar ordem no caos',
+    thesisLabel: 'A tese',
+    thesis:
+      'A excelência do engenheiro passa a depender de sua capacidade de transformar intenção em sistemas confiáveis, dirigindo a execução por IA e melhorando continuamente o ambiente em que pessoas e agentes trabalham. O domínio técnico permite ampliar essa delegação — e responder pelo resultado.',
+    chainLabel: 'A nova unidade de contribuição',
+    chainTitle: 'Não linhas de código. Uma mudança útil, compreendida, verificada e sustentável.',
+    chain: ['Problema relevante', 'Intenção explícita', 'Execução delegável', 'Evidência de correção', 'Efeito observado', 'Aprendizado reutilizável'],
+    chainCta: 'Veja o que quebra em cada etapa',
+    partsLabel: 'A jornada',
+    partsTitle: 'Quatro partes. Dezoito capítulos interativos.',
+    methodLabel: 'Como confiar no que você lê',
+    methodTitle: 'Cada afirmação carrega seu rótulo.',
+    methodBody:
+      'O curso se apoia em uma revisão dirigida de fontes primárias de 2025–2026. Ao longo dos capítulos, o conteúdo é marcado pela sua natureza, para você saber quanto peso ele suporta.',
+    types: [
+      ['Premissa', 'Ideias do manifesto que organizam o problema.'],
+      ['Evidência', 'Pesquisas, documentação e experiências publicadas — com seus limites.'],
+      ['Síntese aplicada', 'Recomendações derivadas das fontes e de raciocínio de engenharia.'],
+      ['Exemplo', 'Cenários e números explicitamente ilustrativos — não resultados observados.'],
+    ],
+    introSummary: 'Ler a nota metodológica completa do relatório',
+    pathsLabel: 'Percursos de leitura',
+    pathsTitle: 'O que você quer levar daqui?',
+    endTitle: 'Comece pela mudança.',
+    endBody: 'Cada capítulo leva poucos minutos e termina com uma verificação rápida. Seu progresso fica salvo apenas neste navegador.',
+    concepts: ['Engenharia de contexto', 'Oráculos de correção', 'Idempotência', 'Contratos de tarefa', 'Harness de agentes', 'Evals', 'Menor privilégio', 'Outbox transacional', 'Métricas DORA', 'Prompt injection', 'Skills', 'Observabilidade', 'Toil', 'Lei de Amdahl'],
+  },
+}[lang];
+
+const continueLinks = Object.fromEntries(CHAPTERS.map((c) => [c.id, chapterUrl(lang, c)]));
+const typeColors = ['#a78bfa', '#22d3ee', '#fbbf24', '#fb7185'];
+
+const paths = {
+  en: [
+    { label: 'Understand the professional shift', ids: [1, 2, 3, 4] },
+    { label: 'Reorganize my technical development', ids: [5, 6, 7, 8, 9, 10] },
+    { label: 'Turn the diagnosis into practice', ids: [11, 12, 13, 14, 15, 16, 18] },
+    { label: 'Go deeper into the research', ids: [2, 17] },
+  ],
+  pt: [
+    { label: 'Compreender a mudança profissional', ids: [1, 2, 3, 4] },
+    { label: 'Reorganizar meu desenvolvimento técnico', ids: [5, 6, 7, 8, 9, 10] },
+    { label: 'Transformar o diagnóstico em prática', ids: [11, 12, 13, 14, 15, 16, 18] },
+    { label: 'Aprofundar a pesquisa', ids: [2, 17] },
+  ],
+}[lang];
+
+const pathChapters = CHAPTERS.map((c) => ({
+  id: c.id,
+  title: c.short[lang],
+  kicker: c.kicker[lang],
+  url: chapterUrl(lang, c),
+  accent: PARTS[c.part - 1].accent,
+  minutes: c.minutes,
+}));
+
+const site = Astro.site!;
+const jsonLd = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: t.siteName,
+    url: new URL(homeUrl(lang), site).href,
+    inLanguage: htmlLang(lang),
+    description: t.siteDescription,
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'Course',
+    name: t.siteName,
+    description: t.siteDescription,
+    inLanguage: htmlLang(lang),
+    url: new URL(homeUrl(lang), site).href,
+    isAccessibleForFree: true,
+    educationalLevel: 'Professional',
+    teaches: copy.concepts,
+    provider: { '@type': 'Organization', name: t.siteName, url: new URL(homeUrl(lang), site).href },
+    hasPart: CHAPTERS.map((c) => ({
+      '@type': 'LearningResource',
+      name: c.title[lang],
+      url: new URL(chapterUrl(lang, c), site).href,
+      timeRequired: `PT${c.minutes}M`,
+    })),
+  },
+];
+---
+
+<Layout
+  lang={lang}
+  title={`${t.siteName} — ${lang === 'en' ? 'an interactive course' : 'um curso interativo'}`}
+  description={t.siteDescription}
+  path={homeUrl(lang)}
+  altPath={homeUrl(other)}
+  jsonLd={jsonLd}
+>
+  <!-- HERO: sticky stage, scroll drives the particle system from chaos to flow -->
+  <section id="hero" class="relative h-[260vh]">
+    <div class="sticky top-0 h-[100svh] overflow-hidden">
+      <div class="aurora" aria-hidden="true"></div>
+      <canvas id="hero-canvas" class="absolute inset-0 h-full w-full opacity-0 transition-opacity duration-[2s] [&.is-ready]:opacity-100" aria-hidden="true"></canvas>
+      <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_30%,#05050a_85%)]" aria-hidden="true"></div>
+
+      <div class="relative z-10 flex h-full flex-col items-center justify-center px-5 text-center">
+        <div id="hero-intro" class="flex flex-col items-center">
+          <p class="eyebrow" data-reveal>{copy.eyebrow}</p>
+          <h1 class="display mt-6 text-[clamp(3rem,9vw,8.5rem)]">
+            <span class="block" data-split>{copy.title1}</span>
+            <span class="gradient-text block pb-2 italic" data-reveal data-delay="0.35">{copy.title2}</span>
+          </h1>
+          <p class="lead mt-8 max-w-2xl" data-reveal data-delay="0.5">{copy.sub}</p>
+          <div class="pointer-events-auto mt-10 flex flex-wrap justify-center gap-3" data-reveal data-delay="0.7">
+            <a href={chapterUrl(lang, CHAPTERS[0])} data-continue={JSON.stringify(continueLinks)} class="btn-primary">
+              {t.start} <span aria-hidden="true">→</span>
+            </a>
+            <a href="#journey" class="btn-ghost">{t.chapters}</a>
+          </div>
+        </div>
+
+        <div id="hero-beats" class="pointer-events-none absolute inset-x-0 top-1/2 -translate-y-1/2 px-6" aria-hidden="true">
+          {copy.beats.map((b, i) => (
+            <p class={`hero-beat display absolute inset-x-0 mx-auto max-w-4xl px-6 text-[clamp(2.2rem,6vw,5.5rem)] opacity-0 ${i === 2 ? 'italic gradient-text' : ''}`}>{b}</p>
+          ))}
+        </div>
+
+        <div id="scroll-cue" class="absolute bottom-8 flex flex-col items-center gap-3 text-xs text-zinc-400">
+          <span class="font-mono tracking-widest uppercase">{copy.scroll}</span>
+          <span class="relative h-10 w-[1px] overflow-hidden bg-white/15"><span class="absolute inset-x-0 top-0 h-4 animate-[scrollcue_1.8s_ease-in-out_infinite] bg-white"></span></span>
+        </div>
+      </div>
+    </div>
+    <!-- accessible text equivalent of the animated beats -->
+    <p class="sr-only">{copy.beats.join(' ')}</p>
+  </section>
+
+  <!-- THESIS -->
+  <section class="relative py-32 sm:py-44">
+    <div class="container-x">
+      <p class="eyebrow" data-reveal>{copy.thesisLabel}</p>
+      <blockquote class="display mt-8 text-[clamp(1.9rem,4.4vw,3.9rem)] leading-[1.12]" data-scrub>
+        {copy.thesis}
+      </blockquote>
+    </div>
+  </section>
+
+  <!-- CHAIN -->
+  <section class="relative py-24">
+    <div class="container-x">
+      <p class="eyebrow" data-reveal>{copy.chainLabel}</p>
+      <h2 class="display mt-5 max-w-4xl text-4xl sm:text-6xl" data-split>{copy.chainTitle}</h2>
+      <div class="relative mt-20">
+        <svg class="absolute top-7 left-0 hidden h-2 w-full lg:block" viewBox="0 0 1000 8" preserveAspectRatio="none" data-draw aria-hidden="true">
+          <defs>
+            <linearGradient id="chain-grad" x1="0" x2="1"><stop offset="0" stop-color="#a78bfa" /><stop offset=".5" stop-color="#22d3ee" /><stop offset="1" stop-color="#fbbf24" /></linearGradient>
+          </defs>
+          <path d="M 40 4 L 960 4" stroke="url(#chain-grad)" stroke-width="2" fill="none" vector-effect="non-scaling-stroke"></path>
+        </svg>
+        <ol class="relative grid gap-6 sm:grid-cols-2 lg:grid-cols-6">
+          {copy.chain.map((step, i) => (
+            <li class="flex flex-col items-start gap-4 lg:items-center lg:text-center" data-reveal data-delay={String(i * 0.12)}>
+              <span class="grid h-14 w-14 place-items-center rounded-full border border-white/15 bg-ink-900 font-mono text-sm text-white shadow-[0_0_40px_-8px_var(--c)]" style={`--c:${['#a78bfa', '#8b9cf7', '#22d3ee', '#5ad6c0', '#a7d27a', '#fbbf24'][i]}`}>
+                {String(i + 1).padStart(2, '0')}
+              </span>
+              <span class="font-serif text-2xl leading-tight text-white">{step}</span>
+            </li>
+          ))}
+        </ol>
+      </div>
+      <a href={chapterUrl(lang, CHAPTERS[0])} class="btn-ghost mt-14" data-reveal>{copy.chainCta} →</a>
+    </div>
+  </section>
+
+  <!-- CONCEPT MARQUEE -->
+  <section class="marquee relative overflow-hidden py-10" aria-hidden="true">
+    <div class="marquee-track flex w-max gap-4">
+      {[...copy.concepts, ...copy.concepts].map((c) => (
+        <span class="rounded-full border border-white/10 bg-white/[0.03] px-6 py-3 font-serif text-2xl whitespace-nowrap text-zinc-200 italic">{c}</span>
+      ))}
+    </div>
+  </section>
+
+  <!-- JOURNEY -->
+  <section id="journey" class="relative scroll-mt-20 py-28">
+    <div class="container-x">
+      <p class="eyebrow" data-reveal>{copy.partsLabel}</p>
+      <h2 class="display mt-5 max-w-3xl text-4xl sm:text-6xl" data-split>{copy.partsTitle}</h2>
+      <div class="mt-16 grid gap-6 lg:grid-cols-2">
+        {PARTS.map((p, i) => (
+          <article class="glass spotlight group flex flex-col p-7 sm:p-9" style={`--accent:${p.accent}`} data-reveal data-delay={String((i % 2) * 0.1)}>
+            <div class="flex items-start justify-between gap-6">
+              <div>
+                <p class="eyebrow">{t.part} {p.id}</p>
+                <h3 class="display mt-3 text-5xl">{p.title[lang]}</h3>
+                <p class="mt-3 max-w-md text-zinc-400">{p.tagline[lang]}</p>
+              </div>
+              <span class="outline-number font-serif text-8xl leading-none" aria-hidden="true">{p.id}</span>
+            </div>
+            <ol class="mt-8 space-y-1">
+              {chaptersOfPart(p.id).map((c) => (
+                <li>
+                  <a href={chapterUrl(lang, c)} data-progress-for={c.id} class="group/item flex items-center gap-4 rounded-2xl px-3 py-3 transition hover:bg-white/5">
+                    <span class="font-mono text-xs text-zinc-500">{String(c.id).padStart(2, '0')}</span>
+                    <span class="flex-1">
+                      <span class="block font-medium text-white">{c.short[lang]}</span>
+                      <span class="mt-0.5 block text-sm text-zinc-400 line-clamp-1">{c.kicker[lang]}</span>
+                    </span>
+                    <span class="done-mark font-mono text-xs text-[var(--accent)] opacity-0">✓</span>
+                    <span class="font-mono text-xs text-zinc-500">{c.minutes}{t.minutes}</span>
+                    <span class="translate-x-0 text-[var(--accent)] opacity-0 transition group-hover/item:translate-x-1 group-hover/item:opacity-100" aria-hidden="true">→</span>
+                  </a>
+                </li>
+              ))}
+            </ol>
+          </article>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- METHOD -->
+  <section class="relative py-28">
+    <div class="container-x grid gap-14 lg:grid-cols-[1fr_1.2fr]">
+      <div>
+        <p class="eyebrow" data-reveal>{copy.methodLabel}</p>
+        <h2 class="display mt-5 text-4xl sm:text-6xl" data-split>{copy.methodTitle}</h2>
+        <p class="lead mt-6" data-reveal>{copy.methodBody}</p>
+      </div>
+      <div class="grid gap-4 sm:grid-cols-2">
+        {copy.types.map(([name, body], i) => (
+          <div class="glass spotlight p-6" style={`--accent:${typeColors[i]}`} data-reveal="scale" data-delay={String(i * 0.08)}>
+            <span class="inline-block h-2.5 w-2.5 rounded-full" style={`background:${typeColors[i]};box-shadow:0 0 20px ${typeColors[i]}`}></span>
+            <h3 class="mt-4 font-serif text-3xl">{name}</h3>
+            <p class="mt-2 text-sm leading-relaxed text-zinc-400">{body}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+    <div class="container-x mt-10">
+      <details class="full-text glass group overflow-hidden" data-reveal>
+        <summary class="flex cursor-pointer items-center justify-between gap-4 p-6 text-white">
+          <span class="font-medium">{copy.introSummary}</span>
+          <span class="chev transition duration-500" aria-hidden="true">⌄</span>
+        </summary>
+        <div class="rich border-t border-white/10 p-6 sm:p-10" set:html={introHtml(lang)} />
+      </details>
+    </div>
+  </section>
+
+  <!-- PATHS -->
+  <section class="relative py-28">
+    <div class="container-x">
+      <p class="eyebrow" data-reveal>{copy.pathsLabel}</p>
+      <h2 class="display mt-5 text-4xl sm:text-6xl" data-split>{copy.pathsTitle}</h2>
+      <div class="mt-12" data-reveal>
+        <PathPicker client:visible lang={lang} paths={paths} chapters={pathChapters} />
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="relative overflow-hidden py-36 text-center">
+    <div class="aurora" aria-hidden="true"></div>
+    <div class="relative container-x">
+      <h2 class="display text-6xl sm:text-8xl" data-split>{copy.endTitle}</h2>
+      <p class="lead mx-auto mt-6 max-w-xl" data-reveal>{copy.endBody}</p>
+      <a href={chapterUrl(lang, CHAPTERS[0])} data-continue={JSON.stringify(continueLinks)} class="btn-primary mt-10" data-reveal>{t.start} →</a>
+    </div>
+  </section>
+</Layout>
+
+<style is:global>
+  @keyframes scrollcue {
+    0% { transform: translateY(-100%); }
+    100% { transform: translateY(260%); }
+  }
+  [data-done='true'] .done-mark { opacity: 1; }
+  /* without motion the scroll story collapses to a normal hero */
+  html:not(.motion-ok) #hero { height: 100svh; }
+  html:not(.motion-ok) #hero-beats { display: none; }
+</style>
+
+<script>
+  import { gsap } from 'gsap';
+  import { ScrollTrigger } from 'gsap/ScrollTrigger';
+  gsap.registerPlugin(ScrollTrigger);
+
+  const hero = document.getElementById('hero')!;
+  const canvas = document.getElementById('hero-canvas') as HTMLCanvasElement;
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // Lazy-load the WebGL scene once the browser is idle.
+  const hasWebGL = (() => {
+    try {
+      const c = document.createElement('canvas');
+      return !!(c.getContext('webgl2') || c.getContext('webgl'));
+    } catch {
+      return false;
+    }
+  })();
+  if (hasWebGL) {
+    const load = () => import('../../scripts/hero-scene').then((m) => m.mountHero(canvas, hero));
+    'requestIdleCallback' in window ? (window as any).requestIdleCallback(load, { timeout: 1200 }) : setTimeout(load, 300);
+  }
+
+  // Scroll story: intro fades, three beats appear in sequence.
+  if (!reduce) {
+    const beats = gsap.utils.toArray<HTMLElement>('.hero-beat');
+    const tl = gsap.timeline({
+      scrollTrigger: { trigger: hero, start: 'top top', end: 'bottom bottom', scrub: 0.8 },
+    });
+    tl.to('#hero-intro', { opacity: 0, y: -60, filter: 'blur(8px)', duration: 1 })
+      .to('#scroll-cue', { opacity: 0, duration: 0.4 }, 0);
+    beats.forEach((b, i) => {
+      tl.fromTo(b, { opacity: 0, y: 60, filter: 'blur(10px)' }, { opacity: 1, y: 0, filter: 'blur(0px)', duration: 1 });
+      if (i < beats.length - 1) tl.to(b, { opacity: 0, y: -60, filter: 'blur(10px)', duration: 1 }, '+=0.6');
+      else tl.to({}, { duration: 1 });
+    });
+  }
+</script>
