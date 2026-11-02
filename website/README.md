@@ -58,8 +58,21 @@ stored only in the reader's browser (`localStorage`); there is no backend.
 Google Analytics 4 is included only when `PUBLIC_GA_ID` is set at build time (the deploy
 workflow sets it), so `npm run dev` and local builds never send analytics. It uses Consent
 Mode v2: analytics cookies stay off until the visitor clicks **Accept** in the banner, and
-ad storage is always off. "Cookie preferences" in the footer reopens the banner. Finishing
-a chapter sends a `chapter_complete` event (`chapter_id`, `language`).
+ad storage is always off. "Cookie preferences" in the footer reopens the banner, and on
+Accept the current page view is sent again (the one sent before the choice had no cookies).
+
+Events and parameters:
+
+- Every event carries `content_language` (`en`/`pt`); events on chapter pages also carry
+  `chapter_id` (1–18), so page views and completions can be compared per chapter.
+- `chapter_complete` when the end of a chapter becomes visible.
+- `language_switch` (`from_language`, `to_language`) when the EN/PT switch is used.
+
+In Google Analytics (property "Software Engineering in the AI Era", ID `G-893MED3DCR`)
+these parameters are registered as the custom dimensions Chapter, Content language,
+Switched from language and Switched to language, and **Explore → "SE in the AI Era -
+Reading report"** shows chapters started vs. completed, audience by language and
+language switches.
 
 ## Deploying to GitHub Pages
 

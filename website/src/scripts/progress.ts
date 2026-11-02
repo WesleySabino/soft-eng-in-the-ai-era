@@ -28,7 +28,8 @@ export function markDone(id: number) {
   const list = readProgress();
   if (list.includes(id)) return;
   write([...list, id]);
-  (window as any).gtag?.('event', 'chapter_complete', { chapter_id: id, language: document.documentElement.lang });
+  // content_language is added to every event by Analytics.astro
+  (window as any).gtag?.('event', 'chapter_complete', { chapter_id: String(id) });
 }
 
 function paint() {

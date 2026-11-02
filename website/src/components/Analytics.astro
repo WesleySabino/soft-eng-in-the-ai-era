@@ -6,6 +6,9 @@
  * - analytics_storage starts "denied" until the visitor accepts in the banner;
  *   ad-related storage is always denied. The choice is kept in localStorage.
  * - Any element with [data-consent-open] reopens the banner.
+ * - Every event carries content_language (en/pt) and, on chapter pages, chapter_id.
+ * - Accepting counts the current page again (the page view sent before had no cookies).
+ * - Clicking a [data-lang-switch] link sends language_switch (from/to language, chapter).
  */
 import type { Lang } from '../data/chapters';
 
@@ -45,7 +48,7 @@ const t = {
           <button type="button" data-consent="granted" class="btn-primary !px-4 !py-1.5 text-xs">{t.accept}</button>
         </div>
       </div>
-      <script is:inline define:vars={{ gaId }}>
+      <script is:inline define:vars={{ gaId, lang }}>
         window.dataLayer = window.dataLayer || [];
         window.gtag = function () {
           window.dataLayer.push(arguments);
@@ -61,6 +64,8 @@ const t = {
           ad_user_data: 'denied',
           ad_personalization: 'denied',
         });
+        var chapter = document.body.dataset.chapter || '';
+        gtag('set', chapter ? { content_language: lang, chapter_id: chapter } : { content_language: lang });
         gtag('js', new Date());
         gtag('config', gaId);
         var s = document.createElement('script');
@@ -77,7 +82,18 @@ const t = {
               localStorage.setItem(KEY, v);
             } catch (e) {}
             gtag('consent', 'update', { analytics_storage: v });
+            if (v === 'granted' && choice !== 'granted') gtag('event', 'page_view');
+            choice = v;
             box.hidden = true;
+          });
+        });
+        document.querySelectorAll('[data-lang-switch]').forEach(function (a) {
+          a.addEventListener('click', function () {
+            gtag('event', 'language_switch', {
+              from_language: lang,
+              to_language: a.getAttribute('data-lang-switch'),
+              transport_type: 'beacon',
+            });
           });
         });
         document.querySelectorAll('[data-consent-open]').forEach(function (b) {
